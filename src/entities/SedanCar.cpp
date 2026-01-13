@@ -11,6 +11,13 @@ SedanCar::SedanCar(float startDist, float velocity, vec3 color, int maxCells,
     : Vehicle(startDist, velocity, color), storedMaxCells(maxCells),
       storedMaxV(maxV) {
   movementStrat = std::make_unique<NaSchMovement>(maxCells, maxV, probSlow);
+
+  // Init segments (misal 15 segment)
+  int numSegments = 15;
+  for (int i = 0; i < numSegments; i++) {
+    // Awalnya semua numpuk di startDist, atau berjejer ke belakang
+    segmentDistances.push_back(startDist - (i * 2.0f));
+  }
 }
 
 /**
@@ -126,12 +133,6 @@ void SedanCar::drawBody() {
       vec2 pt = getBezierPoint(t, p0, p1, p2, p3);
       bezierPolyline.addVertex(pt.x, pt.y);
     }
-
-    // ==================== LANGSUNG DRAW ====================
-    // Point 0 adalah HEAD. Point terakhir adalah TAIL.
-    // Kita mau HEAD tebal/jelas (atau sebaliknya?).
-    // Original: Index terakhir (Head) = Alpha 150, Thick 6.
-    // Sekarang: Index 0 (Head) harus Alpha 150, Thick 6.
 
     float alpha = ofMap(i, 0, bodyPoints.size() - 1, 150, 0);
     float thickness = ofMap(i, 0, bodyPoints.size() - 1, 6, 1);

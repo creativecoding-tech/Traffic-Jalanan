@@ -85,17 +85,77 @@ void ofApp::update() {
 
     SedanCar *car = dynamic_cast<SedanCar *>(vehicle.get());
     if (car) {
+      auto &segments = car->getSegmentDistances();
+
+      // 1. Update Head (Index 0) ikut posisi Vehicle (NaSch)
+      float headDist = car->getDistance(); // Raw distance (0-300)
+
+      // Handle wrapping jump for head
+      // Kalau beda jauh (wrap), reset segments? Atau biarkan physics catch up?
+      // Idealnya: segments[0] = headDist.
+      segments[0] = headDist;
+
+      // 2. Update Ekor (Index 1..N) - Follow logic
+      float time = ofGetElapsedTimef() * 6.0f;
+
+      for (size_t j = 1; j < segments.size(); j++) {
+        float leaderDist = segments[j - 1];
+        float followerDist = segments[j];
+
+        // Target Ideal Spacing (Inchworm logic)
+        float targetSpacing =
+            5.0f + sin(time - j * 0.5f) * 2.0f; // Variasi +/- 2
+
+        // Posisi ideal follower
+        float targetPos = leaderDist - targetSpacing;
+
+        // WRAPPING LOGIC:
+        // Kalau leader ada di 5, follower di 290. Jarak bukan 5 - 290 = -285.
+        // Tapi jarak wrapping.
+        // Kita normalisasi semua ke linear space relatif terhadap leader.
+        // Tapi karena ini loop tertutup, paling gampang kita anggap
+        // kalau jarak > maxCells/2, berarti ada wrapping.
+
+        float diff = leaderDist - followerDist;
+
+        // Koreksi wrapping
+        if (diff < -maxCells / 2)
+          diff += maxCells; // Leader sudah lewat 0, follower masih di 300
+        if (diff > maxCells / 2)
+          diff -= maxCells; // Leader di 300, follower sudah lewat 0 (jarang)
+
+        // Jarak aktual sekarang
+        float actualSpacing = diff;
+
+        // Physics: Move towards target spacing
+        // "Force" sebanding dengan error (Spring)
+        // Error = actualSpacing - targetSpacing
+        // Kalau actual 10, target 5 -> Error 5 (kejauhan) -> speed up
+        // Kalau actual 2, target 5 -> Error -3 (kedeketan) -> slow down /
+        // mundur
+
+        float spacingError = actualSpacing - targetSpacing;
+
+        // Apply movement (Spring strength 0.1 - 0.3)
+        float moveAmt = spacingError * 0.2f;
+
+        segments[j] += moveAmt;
+
+        // Keep in range 0-maxCells
+        if (segments[j] >= maxCells)
+          segments[j] -= maxCells;
+        if (segments[j] < 0)
+          segments[j] += maxCells;
+      }
+
+      // 3. Konversi Scalar Distances -> World Points (vec2)
       std::vector<vec2> bodyPoints;
-      int bodyLength = 15; // Panjang "cacing" (jumlah segment)
-      float segmentSpacing =
-          5.0f; // Jarak antar segment dalam world unit (bukan cell)
+      float roadLen = road->getTotalLength();
 
-      float headDist = car->getDistance() * (road->getTotalLength() / maxCells);
-
-      for (int j = 0; j < bodyLength; j++) {
-        float d = headDist - (j * segmentSpacing);
-        vec2 pt = road->getPointAtDistance(d);
-        bodyPoints.push_back(pt);
+      for (float d : segments) {
+        // Map cell distance -> world distance
+        float worldD = d * (roadLen / maxCells);
+        bodyPoints.push_back(road->getPointAtDistance(worldD));
       }
 
       car->updateBody(bodyPoints);
