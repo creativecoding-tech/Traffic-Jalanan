@@ -99,16 +99,6 @@ void ofApp::draw(){
     ofFill();
     ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
 
-    // ==================== DRAW ROAD ====================
-
-    // Gambar road (garis horizontal abu-abu)
-    ofSetColor(60);  // Abu-abu gelap
-    ofDrawRectangle(50, roadY - 30, roadLength, 60);  // Jalan: width=roadLength, height=60px
-
-    // Gambar center line (putus-putus putih)
-    ofSetColor(255, 100);  // Putih dengan alpha 100
-    ofSetLineWidth(2);
-
     // Gambar garis putus-putus setiap 30 pixels
     for (float x = 50; x < 50 + roadLength; x += 30) {
         ofDrawLine(x, roadY, x + 15, roadY);  // Garis pendek 15px
