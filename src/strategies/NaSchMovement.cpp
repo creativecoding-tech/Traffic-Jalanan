@@ -12,13 +12,11 @@
  * @param probSlow Probabilitas random braking (default 0.2)
  */
 NaSchMovement::NaSchMovement(int maxCells, float maxV, float probSlow)
-    : maxCells(maxCells)
-    , maxV(maxV)
-    , probSlow(probSlow)
-    , grid(nullptr)    // Belum di-set, nanti di-set via setGrid()
-    , gridSize(0)      // Belum di-set, nanti di-set via setGrid()
-{
-}
+    : maxCells(maxCells), maxV(maxV), probSlow(probSlow),
+      grid(nullptr) // Belum di-set, nanti di-set via setGrid()
+      ,
+      gridSize(0) // Belum di-set, nanti di-set via setGrid()
+{}
 
 /**
  * Set Grid Array
@@ -28,9 +26,9 @@ NaSchMovement::NaSchMovement(int maxCells, float maxV, float probSlow)
  *
  * Penting: Kita hanya borrow pointer, tidak own memori
  */
-void NaSchMovement::setGrid(const int* gridPtr, int size) {
-    grid = gridPtr;
-    gridSize = size;
+void NaSchMovement::setGrid(const int *gridPtr, int size) {
+  grid = gridPtr;
+  gridSize = size;
 }
 
 /**
@@ -44,13 +42,12 @@ void NaSchMovement::setGrid(const int* gridPtr, int size) {
  *
  * @param vehicle Reference ke Vehicle yang akan di-update
  */
-void NaSchMovement::update(Vehicle& vehicle) {
-    accelerate(vehicle);
-    brake(vehicle);
-    randomize(vehicle);
-    move(vehicle);
+void NaSchMovement::update(Vehicle &vehicle) {
+  accelerate(vehicle);
+  brake(vehicle);
+  randomize(vehicle);
+  move(vehicle);
 }
-
 
 /**
  * Override Brake dengan Grid Logic
@@ -65,35 +62,55 @@ void NaSchMovement::update(Vehicle& vehicle) {
  *
  * @param vehicle Reference ke Vehicle
  */
-void NaSchMovement::brake(Vehicle& vehicle) {
-    // Pastikan grid sudah di-set!
-    if (grid == nullptr) {
-            MovementStrategy::brake(vehicle);
-        return;
+void NaSchMovement::brake(Vehicle &vehicle) {
+  // Pastikan grid sudah di-set!
+  if (grid == nullptr) {
+    MovementStrategy::brake(vehicle);
+    return;
+  }
+
+  float currentV = vehicle.getVelocity();
+  int currentDist = (int)vehicle.getDistance();
+
+  // FIXED: Definisi ukuran fisik mobil dalam grid cells
+  // Visual length ~75 units. Cell size ~3-4 units.
+  // Jadi carSize sekitar 20-25 cells.
+  int carSize = 25;
+
+  // Kita check sejauh: Velocity + Ukuran Mobil
+  // Tujuannya: Supaya kita berhenti SEBELUM menabrak bumper belakang mobil
+  // depan yang berjarak `carSize` dari pusatnya.
+  int lookAhead = (int)currentV + carSize;
+
+  for (int j = 1; j <= lookAhead; j++) {
+    // Hitung posisi yang akan dicek dengan WRAPPING
+    int checkPos = (currentDist + j) % maxCells;
+
+    // Pastikan posisi dalam range grid
+    if (checkPos >= 0 && checkPos < gridSize) {
+      // Cek apakah ada vehicle di posisi ini
+      if (grid[checkPos] != -1) {
+        // ADA VEHICLE DI DEPAN!
+
+        // Hitung jarak bersih (gap)
+        // gap = j - 1.
+        // Tapi kita butuh gap sebesar `carSize` supaya tidak overlap visually.
+        // Jadi effective gap = j - carSize.
+
+        int effectiveGap = j - carSize;
+
+        // Velocity tidak boleh melebihi effective gap
+        // Jika effectiveGap < 0, berarti sudah nabrak/overlap -> stop (0)
+        if (effectiveGap < 0)
+          effectiveGap = 0;
+
+        vehicle.setVelocity(effectiveGap);
+
+        // Stop checking, kita sudah cari kendaraan terdekat
+        break;
+      }
     }
-    
-    float currentV = vehicle.getVelocity();
-    int currentDist = (int)vehicle.getDistance();
-
-    for (int j = 1; j <= currentV; j++) {
-        // Hitung posisi yang akan dicek dengan WRAPPING
-        int checkPos = (currentDist + j) % maxCells;
-
-        // Pastikan posisi dalam range grid
-        if (checkPos >= 0 && checkPos < gridSize) {
-            // Cek apakah ada vehicle di posisi ini
-            if (grid[checkPos] != -1) {
-                // ADA VEHICLE DI DEPAN!
-                // Kurangi kecepatan: j - 1 (jarak aman)
-                vehicle.setVelocity(j - 1);
-
-                // Stop checking, kita sudah cari kendaraan terdekat
-                break;
-            }
-        }
-    }
-    // Kalau loop selesai tanpa break → tidak ada mobil di depan
-    // → kecepatan tidak berubah
+  }
 }
 
 /**
@@ -108,23 +125,23 @@ void NaSchMovement::brake(Vehicle& vehicle) {
  *
  * @param vehicle Reference ke Vehicle
  */
-void NaSchMovement::move(Vehicle& vehicle) {
-    // Ambil distance dan velocity saat ini
-    float currentDist = vehicle.getDistance();
-    float currentV = vehicle.getVelocity();
+void NaSchMovement::move(Vehicle &vehicle) {
+  // Ambil distance dan velocity saat ini
+  float currentDist = vehicle.getDistance();
+  float currentV = vehicle.getVelocity();
 
-    // Tambahkan velocity ke distance
-    float newDist = currentDist + currentV;
+  // Tambahkan velocity ke distance
+  float newDist = currentDist + currentV;
 
-    while (newDist >= maxCells) {
-        newDist -= maxCells;
-    }
-    while (newDist < 0) {
-        newDist += maxCells;
-    }
+  while (newDist >= maxCells) {
+    newDist -= maxCells;
+  }
+  while (newDist < 0) {
+    newDist += maxCells;
+  }
 
-    // Update distance
-    vehicle.setDistance(newDist);
+  // Update distance
+  vehicle.setDistance(newDist);
 }
 
 /**
@@ -133,16 +150,16 @@ void NaSchMovement::move(Vehicle& vehicle) {
  * Logic: Dengan probabilitas probSlow, kurangi kecepatan 1.
  * probSlow di-set dari constructor (bukan hardcoded 0.2).
  */
-void NaSchMovement::randomize(Vehicle& vehicle) {
-    if (vehicle.getVelocity() > 0) {
-        if (ofRandom(1.0f) < probSlow) {
-            vehicle.setVelocity(vehicle.getVelocity() - .5f);
-        }
+void NaSchMovement::randomize(Vehicle &vehicle) {
+  if (vehicle.getVelocity() > 0) {
+    if (ofRandom(1.0f) < probSlow) {
+      vehicle.setVelocity(vehicle.getVelocity() - .02f);
     }
+  }
 }
 
-void NaSchMovement::accelerate(Vehicle& vehicle) {
-    if (vehicle.getVelocity() < maxV) {
-        vehicle.setVelocity(vehicle.getVelocity() + .2f);
-    }
+void NaSchMovement::accelerate(Vehicle &vehicle) {
+  if (vehicle.getVelocity() < maxV) {
+    vehicle.setVelocity(vehicle.getVelocity() + .02f);
+  }
 }

@@ -22,9 +22,9 @@ void ofApp::setup() {
 
   // ==================== SPAWN VEHICLES ====================
 
-  // Spawn 40 mobil dengan jarak 7 cells
-  int numCars = 40;
-  int spacing = 7; // Jarak antar mobil (cells)
+  // Spawn 8 mobil dengan jarak 35 cells (supaya muat body panjang)
+  int numCars = 8;
+  int spacing = 35; // Jarak antar mobil (cells)
 
   for (int i = 0; i < numCars; i++) {
     // Hitung posisi awal (jarak 7 cells antar mobil)
