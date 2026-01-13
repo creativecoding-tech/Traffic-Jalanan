@@ -146,23 +146,3 @@ void SedanCar::drawBody() {
     ofPopMatrix();
   }
 }
-
-/**
- * Get Bezier Point
- *
- * Hitung posisi titik di cubic bezier curve pada parameter t (0.0 - 1.0).
- * Formula: B(t) = (1-t)³P0 + 3(1-t)²tP1 + 3(1-t)t²P2 + t³P3
- */
-vec2 SedanCar::getBezierPoint(float t, vec2 p0, vec2 p1, vec2 p2, vec2 p3) {
-  float u = 1.0f - t;
-  float tt = t * t;
-  float uu = u * u;
-  float uuu = uu * u;
-  float ttt = tt * t;
-
-  vec2 p;
-  p.x = uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x;
-  p.y = uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y;
-
-  return p;
-}

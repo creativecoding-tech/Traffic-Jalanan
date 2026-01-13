@@ -98,7 +98,6 @@ public:
   // Getter for physics simulation
   std::vector<float> &getSegmentDistances() { return segmentDistances; }
   void drawBody();
-  vec2 getBezierPoint(float t, vec2 p0, vec2 p1, vec2 p2, vec2 p3);
 
 private:
   // Parameter yang disimpan (optional, kalau butuh akses nanti)
@@ -111,6 +110,4 @@ private:
   // PHYSICS: Simpan jarak (distance) tiap segment
   // Index 0 = HEAD, Index N = TAIL
   std::vector<float> segmentDistances;
-
-  float curveIntensity = 1.f;
 };

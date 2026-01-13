@@ -73,9 +73,11 @@ void NaSchMovement::brake(Vehicle &vehicle) {
   int currentDist = (int)vehicle.getDistance();
 
   // FIXED: Definisi ukuran fisik mobil dalam grid cells
-  // Visual length ~75 units. Cell size ~3-4 units.
-  // Jadi carSize sekitar 20-25 cells.
-  int carSize = 25;
+  // Visual length ~120 units (15 segmn * 8 spacing).
+  // 120 / 4 px/cell = ~30 cells.
+  // Ditambah visual circle radius (25px ~ 6 cells).
+  // Total margin aman = 45 cells.
+  int carSize = 45;
 
   // Kita check sejauh: Velocity + Ukuran Mobil
   // Tujuannya: Supaya kita berhenti SEBELUM menabrak bumper belakang mobil

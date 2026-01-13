@@ -37,7 +37,7 @@ private:
 	// Nagel-Schreckenberg parameters
 	const int maxCells = 300;
 	const float maxV = 20.0f;
-	float probSlow = 0.3f;
+	float probSlow = .7f;
 
 	// Data structures
 	std::vector<std::unique_ptr<Vehicle>> traffic;
