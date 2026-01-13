@@ -95,14 +95,9 @@ void ofApp::draw(){
     // ==================== FADE EFFECT (TRAIL) ====================
 
     // Gambar semi-transparent black overlay
-    ofSetColor(0, 15);  // Hitam dengan alpha 15/255 (~6%)
+    ofSetColor(60, 15);
     ofFill();
     ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
-
-    // Gambar garis putus-putus setiap 30 pixels
-    for (float x = 50; x < 50 + roadLength; x += 30) {
-        ofDrawLine(x, roadY, x + 15, roadY);  // Garis pendek 15px
-    }
 
     // ==================== DRAW VEHICLES ====================
 
@@ -132,9 +127,6 @@ void ofApp::draw(){
 
     ofPopMatrix();
 
-    // ==================== OPTIONAL: DEBUG INFO ====================
-
-    // Tampilkan jumlah vehicles (opsional, bisa dihapus nanti)
     ofSetColor(255);
     ofDrawBitmapString("Vehicles: " + ofToString(traffic.size()), 10, 20);
 }
