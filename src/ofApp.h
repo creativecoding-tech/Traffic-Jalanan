@@ -5,6 +5,7 @@
 #include "entities/SedanCar.h"
 #include <vector>
 #include <memory>
+#include "road/Road.h"
 
 using glm::vec2;
 using glm::vec3;
@@ -31,8 +32,7 @@ class ofApp : public ofBaseApp{
 
 private:
 	// Road parameters
-	float roadLength;
-	float roadY;
+	std::unique_ptr<Road> road;
 
 	// Nagel-Schreckenberg parameters
 	const int maxCells = 300;

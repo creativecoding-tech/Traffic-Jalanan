@@ -40,6 +40,8 @@
     <ClCompile Include="src\strategies\MovementStrategy.cpp" />
     <ClCompile Include="src\strategies\NaSchMovement.cpp" />
     <ClCompile Include="src\entities\SedanCar.cpp" />
+    <ClCompile Include="src\road\Road.cpp" />
+    <ClCompile Include="src\road\CurvedRoad.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -99,6 +101,8 @@
     <ClInclude Include="src\entities\Vehicle.h" />
     <ClInclude Include="src\strategies\NaSchMovement.h" />
     <ClInclude Include="src\entities\SedanCar.h" />
+    <ClInclude Include="src\road\Road.h" />
+    <ClInclude Include="src\road\CurvedRoad.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />

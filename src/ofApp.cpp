@@ -1,4 +1,5 @@
 ﻿#include "ofApp.h"
+#include "road/CurvedRoad.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -11,12 +12,10 @@ void ofApp::setup(){
 	ofEnableSmoothing();
 
     // ==================== ROAD SETUP ====================
+    road = std::make_unique<CurvedRoad>();
+    road->generatePath();
 
-         // Road length = lebar layar - margin (100px kiri-kanan)
-    roadLength = ofGetWidth() - 100;
 
-    // Road position = tengah vertikal layar
-    roadY = ofGetHeight() / 2.0f;
 
     // ==================== GRID SETUP ====================
 
@@ -92,43 +91,26 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    // ==================== FADE EFFECT (TRAIL) ====================
-
-    // Gambar semi-transparent black overlay
-    ofSetColor(60, 15);
+    ofSetBackgroundAuto(false);
+    ofSetColor(0, 15);
     ofFill();
     ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
+    road->draw();  // Gambar jalan melengkung
 
     // ==================== DRAW VEHICLES ====================
-
-    // Translate origin ke kiri layar + margin
-    ofPushMatrix();
-    ofTranslate(50, roadY);
-
-    // Gambar semua vehicles
     for (auto& vehicle : traffic) {
-        // Mapping distance linear → X coordinate
-        float xPos = ofMap(
-            vehicle->getDistance(),  // Input: distance (0-299)
-            0, maxCells,              // Input range
-            0, roadLength,            // Output range
-            false                     // Clamp ke range (false = bisa lewat)
-        );
+        float dist = vehicle->getDistance() * (road->getTotalLength() / maxCells);
 
-        // Y position = 0 (karena kita sudah translate ke roadY)
-        float yPos = 0;
+        // Get posisi (x,y) dari distance
+        vec2 pos = road->getPointAtDistance(dist);
 
-        // Angle = 0 (linear road horizontal, tidak perlu rotasi)
-        float angle = 0;
+        // Get arah (tangent) untuk rotasi
+        vec2 tangent = road->getTangentAtDistance(dist);
+        float angle = ofRadToDeg(atan2(tangent.y, tangent.x));
 
         // Gambar vehicle
-        vehicle->draw(xPos, yPos, angle);
+        vehicle->draw(pos.x, pos.y, angle);
     }
-
-    ofPopMatrix();
-
-    ofSetColor(255);
-    ofDrawBitmapString("Vehicles: " + ofToString(traffic.size()), 10, 20);
 }
 
 //--------------------------------------------------------------
