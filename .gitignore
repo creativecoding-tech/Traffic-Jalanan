@@ -1,0 +1,55 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build outputs
+bin/
+!bin/data/
+obj/
+exe/
+
+# Compiled files (intermediate)
+*.obj
+*.o
+*.exe
+*.dll
+!dll/*.dll
+
+# Note: dll/ folder contains OF dependencies - keep those!
+
+# OpenFrameworks specific
+# (icon.aps and icon.rc are NOT ignored - they're project resources)
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+tmpclaude*
+tmpclaude-*-cwd
+
+# Windows reserved names (accidentally created files)
+nul
+CON
+PRN
+AUX
+CLOCK$
+NUL
+COM*
+LPT*
