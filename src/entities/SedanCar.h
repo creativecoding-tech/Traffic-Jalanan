@@ -94,7 +94,7 @@ public:
  */
     void setGrid(const int* gridPtr, int gridSize) override;
 
-    void addBodyPoint(vec2 pos);
+    void updateBody(const std::vector<glm::vec2>& newPoints);
     void drawBody();
     vec2 getBezierPoint(float t, vec2 p0, vec2 p1, vec2 p2, vec2 p3);
 
@@ -105,9 +105,7 @@ private:
 
     // Body system - points yang menyusun bentuk mobil
     std::vector<vec2> bodyPoints;
-    static const int BODY_POINTS = 5;
     float curveIntensity = 10.0f;
-    float lastDistance;
 
 };
 
