@@ -112,5 +112,5 @@ private:
   // Index 0 = HEAD, Index N = TAIL
   std::vector<float> segmentDistances;
 
-  float curveIntensity = 10.0f;
+  float curveIntensity = 1.f;
 };
