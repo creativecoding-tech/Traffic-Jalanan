@@ -105,7 +105,7 @@ private:
 
     // Body system - points yang menyusun bentuk mobil
     std::vector<vec2> bodyPoints;
-    static const int BODY_POINTS = 50;
+    static const int BODY_POINTS = 5;
     float curveIntensity = 10.0f;
     float lastDistance;
 
