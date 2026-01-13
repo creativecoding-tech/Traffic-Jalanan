@@ -38,14 +38,8 @@ public:
  * 2. Buat NaSchMovement strategy
  * 3. Set strategy ke vehicle ini
  */
-    SedanCar(
-        float startDist,
-        int velocity,
-        vec3 color,
-        int maxCells = 300,
-        int maxV = 5,
-        float probSlow = 0.2f
-    );
+    SedanCar(float startDist, float velocity, vec3 color,
+        int maxCells = 300, float maxV = 5.0f, float probSlow = 0.2f);
 
  /**
  * Destructor
@@ -103,7 +97,7 @@ public:
 private:
     // Parameter yang disimpan (optional, kalau butuh akses nanti)
     int storedMaxCells;  // Disimpan untuk referensi
-
+    float storedMaxV;
 
 };
 

@@ -26,7 +26,7 @@ public:
   * @param maxV Kecepatan maksimal (default 5)
   * @param probSlow Probabilitas pengereman mendadak (default 0.2 = 20%)
   */
-    NaSchMovement(int maxCells = 300, int maxV = 5, float probSlow = 0.2f);
+    NaSchMovement(int maxCells = 300, float maxV = 5.0f, float probSlow = 0.2f);
 
 
     /**
@@ -60,11 +60,11 @@ public:
     void setGrid(const int* gridPtr, int gridSize);
 
     void setMaxCells(int cells) { maxCells = cells; }
-    void setMaxV(int v) { this->maxV = v; }
+    void setMaxV(float v) { this->maxV = v; }
     void setProbSlow(float prob) { probSlow = prob; }
 
     int getMaxCells() const { return maxCells; }
-    int getMaxV() const { return maxV; }
+    float getMaxV() const { return maxV; }
     float getProbSlow() const { return probSlow; }
 
 protected:
@@ -92,10 +92,13 @@ protected:
  */
     void move(Vehicle& vehicle) override;
 
+    virtual void randomize(Vehicle& vehicle) override;
+    virtual void accelerate(Vehicle& vehicle) override;
+
 private:
     // Parameter Nagel-Schreckenberg
     int maxCells;      // Jumlah total cells (default 300)
-    int maxV;          // Kecepatan maksimal (default 5)
+    float maxV;          // Kecepatan maksimal (default 5)
     float probSlow;    // Probabilitas random braking (default 0.2)
 
     // Grid untuk O(1) lookup

@@ -32,8 +32,7 @@ void ofApp::setup(){
         // Hitung posisi awal (jarak 7 cells antar mobil)
         float startDist = i * spacing;
 
-        // Kecepatan awal random (0-5)
-        int startV = (int)ofRandom(maxV + 1);  // +1 supaya maxV ikut
+        float startV = .005f;
 
         // Warna random (RGB 0-1)
         vec3 color = vec3(

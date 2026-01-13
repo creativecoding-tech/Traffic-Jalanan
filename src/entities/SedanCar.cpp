@@ -6,21 +6,14 @@
  *
  * Initialize SedanCar dengan parent constructor dan buat strategy.
  */
-SedanCar::SedanCar(
-    float startDist,
-    int velocity,
-    vec3 color,
-    int maxCells,
-    int maxV,
-    float probSlow
-)
-// Panggil constructor Vehicle (parent) dulu
+SedanCar::SedanCar(float startDist, float velocity, vec3 color, int maxCells, float maxV, float probSlow)
     : Vehicle(startDist, velocity, color)
-    , storedMaxCells(maxCells)  // Simpan untuk referensi
+    , storedMaxCells(maxCells)
+    , storedMaxV(maxV)
 {
-    // Buat NaSchMovement strategy
     movementStrat = std::make_unique<NaSchMovement>(maxCells, maxV, probSlow);
 }
+
 
 /**
  * Override update() dari Vehicle
@@ -61,13 +54,14 @@ void SedanCar::update() {
   */
 void SedanCar::draw(float xPos, float yPos, float angle) {
     // Ambil data dari vehicle
-    int currentV = getVelocity();
+    float currentV = getVelocity();
     vec3 col = getColor();
 
     // Hitung size berdasarkan kecepatan
+    // Contoh value
     // v = 0 (macet)  → size besar (20px)
     // v = 5 (ngebut) → size kecil (8px)
-    float size = ofMap(currentV, 0, 5, 20.0f, 8.0f);
+    float size = ofMap(currentV, 0.0f, storedMaxV, 20.0f, 40.0f);
 
     // Tentukan warna render
     ofColor renderCol;

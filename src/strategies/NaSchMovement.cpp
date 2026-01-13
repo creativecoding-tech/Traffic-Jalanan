@@ -11,7 +11,7 @@
  * @param maxV Kecepatan maksimal (default 5)
  * @param probSlow Probabilitas random braking (default 0.2)
  */
-NaSchMovement::NaSchMovement(int maxCells, int maxV, float probSlow)
+NaSchMovement::NaSchMovement(int maxCells, float maxV, float probSlow)
     : maxCells(maxCells)
     , maxV(maxV)
     , probSlow(probSlow)
@@ -72,7 +72,7 @@ void NaSchMovement::brake(Vehicle& vehicle) {
         return;
     }
     
-    int currentV = vehicle.getVelocity();
+    float currentV = vehicle.getVelocity();
     int currentDist = (int)vehicle.getDistance();
 
     for (int j = 1; j <= currentV; j++) {
@@ -111,13 +111,11 @@ void NaSchMovement::brake(Vehicle& vehicle) {
 void NaSchMovement::move(Vehicle& vehicle) {
     // Ambil distance dan velocity saat ini
     float currentDist = vehicle.getDistance();
-    int currentV = vehicle.getVelocity();
+    float currentV = vehicle.getVelocity();
 
     // Tambahkan velocity ke distance
     float newDist = currentDist + currentV;
 
-    // WRAPPING: Modulo maxCells
-    // fmod() untuk float (tidak pakai % karena itu untuk integer)
     while (newDist >= maxCells) {
         newDist -= maxCells;
     }
@@ -127,4 +125,24 @@ void NaSchMovement::move(Vehicle& vehicle) {
 
     // Update distance
     vehicle.setDistance(newDist);
+}
+
+/**
+ * Override Randomize dengan probSlow dari Constructor
+ *
+ * Logic: Dengan probabilitas probSlow, kurangi kecepatan 1.
+ * probSlow di-set dari constructor (bukan hardcoded 0.2).
+ */
+void NaSchMovement::randomize(Vehicle& vehicle) {
+    if (vehicle.getVelocity() > 0) {
+        if (ofRandom(1.0f) < probSlow) {
+            vehicle.setVelocity(vehicle.getVelocity() - .5f);
+        }
+    }
+}
+
+void NaSchMovement::accelerate(Vehicle& vehicle) {
+    if (vehicle.getVelocity() < maxV) {
+        vehicle.setVelocity(vehicle.getVelocity() + 0.4f);
+    }
 }
