@@ -10,6 +10,7 @@ SedanCar::SedanCar(float startDist, float velocity, vec3 color, int maxCells, fl
     : Vehicle(startDist, velocity, color)
     , storedMaxCells(maxCells)
     , storedMaxV(maxV)
+    , lastDistance(startDist)
 {
     movementStrat = std::make_unique<NaSchMovement>(maxCells, maxV, probSlow);
 }
@@ -53,50 +54,11 @@ void SedanCar::update() {
   * @param angle Rotasi dalam derajat (0 = horizontal ke kanan)
   */
 void SedanCar::draw(float xPos, float yPos, float angle) {
-    // Ambil data dari vehicle
-    float currentV = getVelocity();
-    vec3 col = getColor();
+    // Gambar body bezier
+    drawBody();
 
-    // Hitung size berdasarkan kecepatan
-    // Contoh value
-    // v = 0 (macet)  → size besar (20px)
-    // v = 5 (ngebut) → size kecil (8px)
-    float size = ofMap(currentV, 0.0f, storedMaxV, 20.0f, 40.0f);
-
-    // Tentukan warna render
-    ofColor renderCol;
-    if (currentV == 0) {
-        // Kalau macet (v = 0), warna merah terang
-        renderCol = ofColor(255, 0, 0);
-    }
-    else {
-        // Kalau bergerak, pakai warna asli (convert vec3 0-1 ke ofColor 0-255)
-        renderCol = ofColor(
-            col.r * 255,  // R
-            col.g * 255,  // G
-            col.b * 255,  // B
-            200           // Alpha (semi-transparent)
-        );
-    }
-
-    // Gambar mobil dengan transformasi (rotasi)
-    ofPushMatrix();
-
-    // Pindah origin ke posisi mobil
-    ofTranslate(xPos, yPos);
-
-    // Rotasi sesuai arah road
-    ofRotateDeg(angle);
-
-    // Set warna
-    ofSetColor(renderCol);
-
-    // Gambar mobil sebagai rectangle
-    // -size/2, -size/4 → supaya center rectangle di (0, 0)
-    // lebar = size, tinggi = size/2 (mobil lebih panjang dari lebar)
-    ofDrawRectangle(-size / 2, -size / 4, size, size / 2);
-
-    ofPopMatrix();
+    // Tidak ada kotak/rectangle mobil
+    // Body = mobil itu sendiri
 }
 
 /**
@@ -124,4 +86,82 @@ void SedanCar::setGrid(const int* gridPtr, int gridSize) {
             naschStrat->setGrid(gridPtr, gridSize);
         }
     }
+}
+
+void SedanCar::addBodyPoint(vec2 pos) {
+    // DETEKSI WRAPPING
+    float currentDist = getDistance();
+
+    if (currentDist < lastDistance - 50) {
+        // Clear body saat wrapping
+        bodyPoints.clear();
+    }
+
+    lastDistance = currentDist;
+
+    // Tambahkan point
+    bodyPoints.push_back(pos);
+
+    if (bodyPoints.size() > BODY_POINTS) {
+        bodyPoints.erase(bodyPoints.begin());
+    }
+}
+/**
+ * Draw Bezier Trail
+ *
+ * Gambar trail dengan bezier curve yang "melilit" seperti ular.
+ * Menggunakan teknik dari GridBezier::setBezierMulurLR().
+ */
+void SedanCar::drawBody() {
+    if (bodyPoints.size() < 4) return;
+
+    // Loop setiap segment body
+    for (int i = 0; i < bodyPoints.size() - 1; i++) {
+        vec2 p0 = bodyPoints[i];
+        vec2 p3 = bodyPoints[i + 1];
+
+        // Control points
+        vec2 p1 = p0 + vec2(curveIntensity * 10, (p0.y - p3.y) / 2);
+        vec2 p2 = p3 - vec2(curveIntensity * 10, (p0.y - p3.y) / 2);
+
+        // Tessellate
+        int segments = 20;
+        ofPolyline bezierPolyline;
+
+        for (int k = 0; k <= segments; k++) {
+            float t = (float)k / segments;
+            vec2 pt = getBezierPoint(t, p0, p1, p2, p3);
+            bezierPolyline.addVertex(pt.x, pt.y);
+        }
+
+        // ==================== LANGSUNG DRAW ====================
+        float alpha = ofMap(i, 0, bodyPoints.size() - 1, 0, 150);
+        float thickness = ofMap(i, 0, bodyPoints.size() - 1, 1, 6);
+
+        vec3 col = getColor();
+        ofSetColor(col.r * 255, col.g * 255, col.b * 255, alpha);
+        ofSetLineWidth(thickness);
+
+        bezierPolyline.draw();  // LANGSUNG DRAW, tanpa loop ofDrawLine
+    }
+}
+
+/**
+ * Get Bezier Point
+ *
+ * Hitung posisi titik di cubic bezier curve pada parameter t (0.0 - 1.0).
+ * Formula: B(t) = (1-t)³P0 + 3(1-t)²tP1 + 3(1-t)t²P2 + t³P3
+ */
+vec2 SedanCar::getBezierPoint(float t, vec2 p0, vec2 p1, vec2 p2, vec2 p3) {
+    float u = 1.0f - t;
+    float tt = t * t;
+    float uu = u * u;
+    float uuu = uu * u;
+    float ttt = tt * t;
+
+    vec2 p;
+    p.x = uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x;
+    p.y = uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y;
+
+    return p;
 }

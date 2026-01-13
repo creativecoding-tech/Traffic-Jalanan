@@ -85,6 +85,13 @@ void ofApp::update(){
     // Update semua vehicles (movement logic)
     for (auto& vehicle : traffic) {
         vehicle->update();
+
+        SedanCar* car = dynamic_cast<SedanCar*>(vehicle.get());
+        if (car) {
+            float dist = car->getDistance() * (road->getTotalLength() / maxCells);
+            vec2 currentPos = road->getPointAtDistance(dist);
+            car->addBodyPoint(currentPos);  // addBodyPoint, bukan addTrailPoint
+        }
     }
 }
 

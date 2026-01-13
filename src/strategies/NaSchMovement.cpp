@@ -143,6 +143,6 @@ void NaSchMovement::randomize(Vehicle& vehicle) {
 
 void NaSchMovement::accelerate(Vehicle& vehicle) {
     if (vehicle.getVelocity() < maxV) {
-        vehicle.setVelocity(vehicle.getVelocity() + 0.4f);
+        vehicle.setVelocity(vehicle.getVelocity() + 1.f);
     }
 }

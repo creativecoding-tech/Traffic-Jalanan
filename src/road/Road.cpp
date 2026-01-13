@@ -5,8 +5,8 @@ void Road::draw(float offsetX, float offsetY) {
     ofTranslate(offsetX, offsetY);
 
     // Main road
-    ofSetColor(100, 100, 150);
-    ofSetLineWidth(40.0f);
+    ofSetColor(0, 0, 0);
+    ofSetLineWidth(10.0f);
     polyline.draw();
 
     ofPopMatrix();
