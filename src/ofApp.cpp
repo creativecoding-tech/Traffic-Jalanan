@@ -25,8 +25,8 @@ void ofApp::setup() {
     TrackInstance t;
     // Bounds: full screen minus margin
     ofRectangle bounds(50, 50, w - 100, h - 100);
-    // Spawn mobil dengan maxCellsOuter
-    t.setup(bounds, numCarsOuter, 50, maxV, probSlowOuter, maxCellsOuter, currentRoadType);
+    // Spawn mobil dengan maxVOuter, maxCellsOuter
+    t.setup(bounds, numCarsOuter, 50, maxVOuter, probSlowOuter, maxCellsOuter, currentRoadType);
     tracks.push_back(t);
   }
 
@@ -35,8 +35,8 @@ void ofApp::setup() {
   {
     TrackInstance t;
     ofRectangle bounds(200, 200, w - 400, h - 400);
-    // Spawn mobil dengan maxCellsMiddle
-    t.setup(bounds, numCarsMiddle, 50, maxV * 0.8f, probSlowMiddle, maxCellsMiddle, currentRoadType);
+    // Spawn mobil dengan maxVMiddle, maxCellsMiddle
+    t.setup(bounds, numCarsMiddle, 50, maxVMiddle, probSlowMiddle, maxCellsMiddle, currentRoadType);
     tracks.push_back(t);
   }
 
@@ -45,8 +45,8 @@ void ofApp::setup() {
   {
     TrackInstance t;
     ofRectangle bounds(350, 350, w - 700, h - 700);
-    // Spawn mobil dengan maxCellsInner
-    t.setup(bounds, numCarsInner, 45, maxV * 0.6f, probSlowInner, maxCellsInner, currentRoadType);
+    // Spawn mobil dengan maxVInner, maxCellsInner
+    t.setup(bounds, numCarsInner, 45, maxVInner, probSlowInner, maxCellsInner, currentRoadType);
     tracks.push_back(t);
   }
 }

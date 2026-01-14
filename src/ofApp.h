@@ -59,9 +59,6 @@ private:
   // Current road type
   RoadType currentRoadType = CIRCLE;  // Default: CircleRoad
 
-  // Global params (bisa dipindah ke track kalau mau variasi)
-  const float maxV = 20.0f;       // Kecepatan maksimal base value
-
   // Jumlah mobil per track
   int numCarsOuter = 10;   // Track luar
   int numCarsMiddle = 8;   // Track tengah
@@ -72,10 +69,15 @@ private:
   int maxCellsMiddle = 600;  // Track tengah
   int maxCellsInner = 400;   // Track dalam - lebih pendek
 
+  // Kecepatan maksimal per track (track lebih besar = lebih cepat)
+  float maxVOuter = 20.0f;    // Track luar - paling cepat
+  float maxVMiddle = 15.0f;   // Track tengah - sedang
+  float maxVInner = 10.0f;    // Track dalam - paling lambat
+
   // Probabilitas random braking per track (semakin kecil, semakin lancar)
-  float probSlowOuter = 0.002f;   // Track luar - sangat lancar (2% ngaco)
-  float probSlowMiddle = 0.15f;  // Track tengah - lancar (15% ngaco)
-  float probSlowInner = 0.25f;   // Track dalam - sedang (25% ngaco)
+  float probSlowOuter = 0.002f;   // Track luar
+  float probSlowMiddle = 0.15f;  // Track tengah
+  float probSlowInner = 0.25f;   // Track dalam
 
   // Bezier curve helper (dari TestModelNaSch)
   static ofPoint getBezierPoint(float t, ofPoint p0, ofPoint p1, ofPoint p2, ofPoint p3);
