@@ -67,7 +67,7 @@ void ofApp::draw() {
   ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
 
   for (auto &track : tracks) {
-    track.draw(curveIntensity, &ofApp::getBezierPoint);
+    track.draw(curveIntensity, numLinesPerCar, &ofApp::getBezierPoint);
   }
 }
 
@@ -166,7 +166,7 @@ void ofApp::TrackInstance::update() {
   }
 }
 
-void ofApp::TrackInstance::draw(float curveIntensity, ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint)) {
+void ofApp::TrackInstance::draw(float curveIntensity, int numLinesPerCar, ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint)) {
   // Draw Road
   road->draw();
 
@@ -179,44 +179,52 @@ void ofApp::TrackInstance::draw(float curveIntensity, ofPoint (bezierHelper)(flo
 
     vehicle->draw(pos.x, pos.y, angle);
 
-    // Gambar garis radial bezier dari center screen ke mobil
+    // Gambar MULTIPLE garis radial bezier dari center screen ke mobil
     vec2 carPos(pos.x, pos.y);
-
-    // Center screen
     ofPoint p0(ofGetWidth() / 2, ofGetHeight() / 2);
-
-    // Hitung angle dari center ke mobil
     float angleToCar = atan2(carPos.y - p0.y, carPos.x - p0.x);
-
-    // Curve amount
     float radius = glm::length(carPos - vec2(p0.x, p0.y));
-    float curveAmount = radius * curveIntensity;
-
-    // Control points untuk bezier
-    ofPoint p1(cos(angleToCar + HALF_PI) * curveAmount + p0.x,
-               sin(angleToCar + HALF_PI) * curveAmount + p0.y);
-    ofPoint p2(p1.x, p1.y);
-    ofPoint p3(carPos.x, carPos.y);
-
-    // Tessellate bezier curve
-    ofPolyline bezierPolyline;
-    int segments = 30;
-
-    for(int k = 0; k <= segments; k++) {
-      float t = (float)k / segments;
-      ofPoint p = bezierHelper(t, p0, p1, p2, p3);
-      bezierPolyline.addVertex(p.x, p.y);
-    }
-
-    // Gambar per segment dengan efek pulsing
     vec3 col = vehicle->getColor();
-    for(int k = 0; k < bezierPolyline.size() - 1; k++) {
-      float t = (float)k / bezierPolyline.size();
-      float pulse = sin(t * TWO_PI + ofGetFrameNum() * 0.05f);
-      float lineWidth = ofMap(pulse, -1, 1, 1, 3);
-      ofSetLineWidth(lineWidth);
-      ofSetColor(col.r * 255, col.g * 255, col.b * 255, 100);
-      ofDrawLine(bezierPolyline[k], bezierPolyline[k + 1]);
+
+    // Loop untuk setiap garis
+    for(int lineIdx = 0; lineIdx < numLinesPerCar; lineIdx++) {
+      // Hitung offset angle untuk setiap garis (spread sekitar angleToCar)
+      float angleOffset = ofMap(lineIdx, 0, numLinesPerCar - 1,
+                                 -PI / 6, PI / 6); // Spread 60 derajat total
+      float lineAngle = angleToCar + angleOffset;
+
+      // Curve amount (bervariasi sedikit per garis)
+      float curveAmount = radius * curveIntensity * (1.0f + lineIdx * 0.1f);
+
+      // Control points untuk bezier dengan variasi angle
+      ofPoint p1(cos(lineAngle + HALF_PI) * curveAmount + p0.x,
+                 sin(lineAngle + HALF_PI) * curveAmount + p0.y);
+      ofPoint p2(p1.x, p1.y);
+      ofPoint p3(carPos.x, carPos.y);
+
+      // Tessellate bezier curve
+      ofPolyline bezierPolyline;
+      int segments = 30;
+
+      for(int k = 0; k <= segments; k++) {
+        float t = (float)k / segments;
+        ofPoint p = bezierHelper(t, p0, p1, p2, p3);
+        bezierPolyline.addVertex(p.x, p.y);
+      }
+
+      // Gambar per segment dengan efek pulsing (offset per garis)
+      for(int k = 0; k < bezierPolyline.size() - 1; k++) {
+        float t = (float)k / bezierPolyline.size();
+        // Pulse offset berbeda untuk setiap garis biar tidak sinkron
+        float pulse = sin(t * TWO_PI + ofGetFrameNum() * 0.05f + lineIdx * 0.5f);
+        float lineWidth = ofMap(pulse, -1, 1, 1, 3);
+        ofSetLineWidth(lineWidth);
+
+        // Alpha bervariasi per garis (garis tengah lebih solid)
+        float alpha = ofMap(lineIdx, 0, numLinesPerCar - 1, 80, 150);
+        ofSetColor(col.r * 255, col.g * 255, col.b * 255, alpha);
+        ofDrawLine(bezierPolyline[k], bezierPolyline[k + 1]);
+      }
     }
   }
 }

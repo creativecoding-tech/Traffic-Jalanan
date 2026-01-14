@@ -42,7 +42,7 @@ private:
     void setup(ofRectangle bounds, int numCars, int spacing, float maxV,
                float probSlow);
     void update();
-    void draw(float curveIntensity, ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint));
+    void draw(float curveIntensity, int numLinesPerCar, ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint));
   };
 
   // Tracks
@@ -56,5 +56,8 @@ private:
   static ofPoint getBezierPoint(float t, ofPoint p0, ofPoint p1, ofPoint p2, ofPoint p3);
 
   // Parameter untuk intensitas kurva garis radial
-  float curveIntensity = 0.3f;
+  float curveIntensity = 0.5f;
+
+  // Jumlah garis radial per mobil (default 5)
+  int numLinesPerCar = 5;
 };
