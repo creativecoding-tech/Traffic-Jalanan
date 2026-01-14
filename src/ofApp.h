@@ -49,8 +49,7 @@ private:
   std::vector<TrackInstance> tracks;
 
   // Global params (bisa dipindah ke track kalau mau variasi)
-  const float maxV = 20.0f;
-  float probSlow = .3f; // Default global (jarang dipakai kalau per-track)
+  const float maxV = 20.0f;       // Kecepatan maksimal base value
 
   // Jumlah mobil per track
   int numCarsOuter = 10;   // Track luar
@@ -58,10 +57,10 @@ private:
   int numCarsInner = 6;    // Track dalam
 
   // Ukuran track dalam cells (semakin besar, semakin panjang tracknya)
-  int maxCells = 600;  // Default 600 (doubled dari 300)
+  int maxCells = 600;  // Default 600 (increased from 300)
 
   // Probabilitas random braking per track (semakin kecil, semakin lancar)
-  float probSlowOuter = 0.02f;   // Track luar - sangat lancar (3% ngaco)
+  float probSlowOuter = 0.02f;   // Track luar - sangat lancar (2% ngaco)
   float probSlowMiddle = 0.15f;  // Track tengah - lancar (15% ngaco)
   float probSlowInner = 0.25f;   // Track dalam - sedang (25% ngaco)
 

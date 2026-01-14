@@ -12,7 +12,7 @@ SedanCar::SedanCar(float startDist, float velocity, vec3 color, int maxCells,
       storedMaxV(maxV) {
   movementStrat = std::make_unique<NaSchMovement>(maxCells, maxV, probSlow);
 
-  // Init segments (misal 15 segment)
+  // Init segments untuk physics simulation
   int numSegments = 15;
   for (int i = 0; i < numSegments; i++) {
     // Awalnya semua numpuk di startDist, atau berjejer ke belakang
@@ -31,7 +31,7 @@ SedanCar::SedanCar(float startDist, float velocity, vec3 color, int maxCells,
  * 3. Strategy akan menjalankan 4 aturan Nagel-Schreckenberg:
  *    - Accelerate
  *    - Brake (dengan grid lookup)
- *    - Randomize (20% kemungkinan)
+ *    - Randomize (sesuai probSlow parameter)
  *    - Move (dengan wrapping)
  */
 void SedanCar::update() {
@@ -45,24 +45,20 @@ void SedanCar::update() {
 /**
  * Override draw() dari Vehicle
  *
- * Method ini menggambar SedanCar ke layar.
+ * Method ini menggambar SedanCar ke layar sebagai simple circle.
  *
  * Visualisasi:
- * - Mobil digambar sebagai rectangle (kotak)
- * - Size berbanding terbalik dengan kecepatan (lambat = besar, cepat = kecil)
- * - Warna merah kalau macet (v = 0)
- * - Rotasi sesuai arah road
+ * - Mobil digambar sebagai circle sederhana
+ * - Size berbanding terbalik dengan kecepatan (lambat = besar 20px, cepat = kecil 10px)
+ * - Warna merah kalau macet (v < 0.1), warna mobil kalau jalan
  *
  * @param xPos Posisi X di layar
  * @param yPos Posisi Y di layar
- * @param angle Rotasi dalam derajat (0 = horizontal ke kanan)
+ * @param angle Rotasi dalam derajat (tidak dipakai untuk circle)
  */
 void SedanCar::draw(float xPos, float yPos, float angle) {
-  // Gambar body bezier
+  // Gambar mobil sebagai circle
   drawBody();
-
-  // Tidak ada kotak/rectangle mobil
-  // Body = mobil itu sendiri
 }
 
 /**

@@ -7,15 +7,14 @@
  *
  * Initialize semua member variables dengan nilai default atau parameter
  *
- * @param maxCells Jumlah total cells (default 300)
- * @param maxV Kecepatan maksimal (default 5)
- * @param probSlow Probabilitas random braking (default 0.2)
+ * @param maxCells Jumlah total cells (default 600, track-specific)
+ * @param maxV Kecepatan maksimal (track-specific: outer=20, middle=16, inner=12)
+ * @param probSlow Probabilitas random braking (track-specific: 0.02-0.25)
  */
 NaSchMovement::NaSchMovement(int maxCells, float maxV, float probSlow)
     : maxCells(maxCells), maxV(maxV), probSlow(probSlow),
-      grid(nullptr) // Belum di-set, nanti di-set via setGrid()
-      ,
-      gridSize(0) // Belum di-set, nanti di-set via setGrid()
+      grid(nullptr),      // Belum di-set, nanti di-set via setGrid()
+      gridSize(0)         // Belum di-set, nanti di-set via setGrid()
 {}
 
 /**
@@ -35,9 +34,9 @@ void NaSchMovement::setGrid(const int *gridPtr, int size) {
  * Update Vehicle dengan 4 Aturan Nagel-Schreckenberg
  *
  * URUTAN PENTING! Tidak boleh diubah:
- * 1. Accelerate (v++)
+ * 1. Accelerate (v += 0.02)
  * 2. Brake (cek mobil depan via grid)
- * 3. Randomize (20% kemungkinan v--)
+ * 3. Randomize (sesuai probSlow parameter)
  * 4. Move (distance += v dengan wrapping)
  *
  * @param vehicle Reference ke Vehicle yang akan di-update
@@ -72,16 +71,12 @@ void NaSchMovement::brake(Vehicle &vehicle) {
   float currentV = vehicle.getVelocity();
   int currentDist = (int)vehicle.getDistance();
 
-  // FIXED: Definisi ukuran fisik mobil dalam grid cells
-  // Visual length ~120 units (15 segmn * 8 spacing).
-  // 120 / 4 px/cell = ~30 cells.
-  // Ditambah visual circle radius (25px ~ 6 cells).
-  // Total margin aman = 45 cells.
+  // Car size dalam grid cells untuk collision detection
+  // Ini adalah jarak aman minimum antar mobil (braking distance buffer)
   int carSize = 45;
 
   // Kita check sejauh: Velocity + Ukuran Mobil
-  // Tujuannya: Supaya kita berhenti SEBELUM menabrak bumper belakang mobil
-  // depan yang berjarak `carSize` dari pusatnya.
+  // Tujuannya: Supaya kita berhenti SEBELUM menabrak mobil di depan
   int lookAhead = (int)currentV + carSize;
 
   for (int j = 1; j <= lookAhead; j++) {
@@ -149,8 +144,8 @@ void NaSchMovement::move(Vehicle &vehicle) {
 /**
  * Override Randomize dengan probSlow dari Constructor
  *
- * Logic: Dengan probabilitas probSlow, kurangi kecepatan 1.
- * probSlow di-set dari constructor (bukan hardcoded 0.2).
+ * Logic: Dengan probabilitas probSlow, kurangi kecepatan 0.02.
+ * probSlow di-set dari constructor (track-specific: 0.02-0.25).
  */
 void NaSchMovement::randomize(Vehicle &vehicle) {
   if (vehicle.getVelocity() > 0) {

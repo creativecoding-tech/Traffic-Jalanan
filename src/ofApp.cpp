@@ -116,7 +116,7 @@ void ofApp::TrackInstance::update() {
   for (auto &vehicle : traffic) {
     vehicle->update();
 
-    // Update SedanCar specific logic (Body Segments)
+    // Update SedanCar segment positions (untuk physics simulation)
     SedanCar *car = dynamic_cast<SedanCar *>(vehicle.get());
     if (car) {
       auto &segments = car->getSegmentDistances();
@@ -165,7 +165,7 @@ void ofApp::TrackInstance::update() {
 }
 
 void ofApp::TrackInstance::draw(float curveIntensity, int numLinesPerCar, ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint)) {
-  // Draw Road - DIHILANGKAN (tidak ditampilkan)
+  // Road tidak ditampilkan (hanya mobil & garis radial)
   // road->draw();
 
   // Draw Vehicles

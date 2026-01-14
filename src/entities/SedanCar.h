@@ -26,19 +26,19 @@ public:
    * Constructor
    *
    * @param startDist Posisi awal di jalan (distance)
-   * @param velocity Kecepatan awal (0-5)
+   * @param velocity Kecepatan awal (0.0 - maxV)
    * @param color Warna kendaraan (RGB 0.0 - 1.0)
-   * @param maxCells Jumlah total cells (default 300)
-   * @param maxV Kecepatan maksimal (default 5)
-   * @param probSlow Probabilitas random braking (default 0.2)
+   * @param maxCells Jumlah total cells (default 600, tapi tiap track beda)
+   * @param maxV Kecepatan maksimal (track-specific: outer=20, middle=16, inner=12)
+   * @param probSlow Probabilitas random braking (track-specific: 0.02-0.25)
    *
    * Di constructor ini kita:
    * 1. Panggil constructor Vehicle (parent)
    * 2. Buat NaSchMovement strategy
    * 3. Set strategy ke vehicle ini
    */
-  SedanCar(float startDist, float velocity, vec3 color, int maxCells = 300,
-           float maxV = 5.0f, float probSlow = 0.2f);
+  SedanCar(float startDist, float velocity, vec3 color, int maxCells = 600,
+           float maxV = 20.0f, float probSlow = 0.02f);
 
   /**
    * Destructor
@@ -68,13 +68,10 @@ public:
    *
    * Method ini menggambar SedanCar ke layar.
    *
-   * Untuk curved road:
-   * 1. Ambil posisi (x, y) dari distance (via Road/Path)
-   * 2. Gambar mobil (circle atau rectangle)
-   * 3. Optional: rotasi sesuai arah road
-   *
-   * CATATAN: Implementasi akan di SedanCar.cpp
-   * karena butuh akses ke Road object.
+   * Visualisasi:
+   * - Mobil digambar sebagai circle sederhana
+   * - Size berbanding terbalik dengan kecepatan (lambat = besar, cepat = kecil)
+   * - Warna merah kalau macet (v < 0.1)
    *
    * @param xPos X position (dihitung dari road/path)
    * @param yPos Y position (dihitung dari road/path)
