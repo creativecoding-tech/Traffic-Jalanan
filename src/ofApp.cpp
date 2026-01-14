@@ -215,30 +215,29 @@ void ofApp::TrackInstance::draw(float curveIntensity, int numLinesPerCar, ofPoin
     float v = vehicle->getVelocity();
     float carDiameter = ofMap(v, 0, 15, 20, 10);  // Diameter mobil (10-20 pixel)
     float carRadius = carDiameter / 2.0f;            // Radius mobil
-
-    // Titik akhir di pinggir luar mobil + gap kecil supaya tidak menyentuh
     float gap = 5.0f;  // Gap 5 pixel dari pinggir mobil
-    float distToEdge = radius - carRadius - gap;
-    ofPoint p3_carPos(cos(angleToCar) * distToEdge + p0.x,
-                       sin(angleToCar) * distToEdge + p0.y);
 
     // Loop untuk setiap garis
     for(int lineIdx = 0; lineIdx < numLinesPerCar; lineIdx++) {
-      // Hitung offset angle untuk variasi control points
-      float angleOffset = ofMap(lineIdx, 0, numLinesPerCar - 1,
-                                 -PI / 6, PI / 6); // Spread 60 derajat total
-      float lineAngle = angleToCar + angleOffset;
+      // Offset angle untuk posisi tersebar di sekeliling mobil (0 - 360 derajat)
+      float spreadAngle = ofMap(lineIdx, 0, numLinesPerCar, 0, TWO_PI);
 
-      // Curve amount (bervariasi sedikit per garis)
+      // Curve amount untuk kontrol kelengkungan garis
       float curveAmount = radius * curveIntensity * (1.0f + lineIdx * 0.1f);
 
-      // Control points untuk bezier dengan variasi angle
-      ofPoint p1(cos(lineAngle + HALF_PI) * curveAmount + p0.x,
-                 sin(lineAngle + HALF_PI) * curveAmount + p0.y);
-      ofPoint p2(p1.x, p1.y);
+      // Control points untuk bezier
+      // P1 dan P2 di tengah-tengah, variasi sedikit berdasarkan lineIdx
+      float midRadius = radius * 0.5f;  // Titik kontrol di tengah jarak
+      ofPoint p1(cos(angleToCar + HALF_PI) * curveAmount * 0.3f + p0.x,
+                 sin(angleToCar + HALF_PI) * curveAmount * 0.3f + p0.y);
+      ofPoint p2(cos(angleToCar - HALF_PI) * curveAmount * 0.3f + p0.x,
+                 sin(angleToCar - HALF_PI) * curveAmount * 0.3f + p0.y);
 
-      // Titik akhir selalu ke mobil (tidak divariasi!)
-      ofPoint p3(p3_carPos);
+      // Titik akhir di sekeliling mobil!
+      // Posisi tersebar mengelilingi mobil
+      float distToEdge = carRadius + gap;  // Jarak dari pusat mobil ke pinggir luar (+ gap)
+      ofPoint p3(carPos.x + cos(spreadAngle) * distToEdge,
+                 carPos.y + sin(spreadAngle) * distToEdge);
 
       // Tessellate bezier curve
       ofPolyline bezierPolyline;
