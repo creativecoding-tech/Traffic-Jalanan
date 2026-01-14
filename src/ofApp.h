@@ -67,8 +67,10 @@ private:
   int numCarsMiddle = 8;   // Track tengah
   int numCarsInner = 6;    // Track dalam
 
-  // Ukuran track dalam cells (semakin besar, semakin panjang tracknya)
-  int maxCells = 600;  // Default 600 (increased from 300)
+  // Ukuran track dalam cells per track (semakin besar track, semakin banyak cells)
+  int maxCellsOuter = 800;   // Track luar - lebih panjang
+  int maxCellsMiddle = 600;  // Track tengah
+  int maxCellsInner = 400;   // Track dalam - lebih pendek
 
   // Probabilitas random braking per track (semakin kecil, semakin lancar)
   float probSlowOuter = 0.002f;   // Track luar - sangat lancar (2% ngaco)
