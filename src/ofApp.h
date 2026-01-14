@@ -66,7 +66,7 @@ private:
 
   // Jumlah mobil per track
   int numCarsOuter = 20;   // Track luar
-  int numCarsMiddle = 8;   // Track tengah
+  int numCarsMiddle = 9;   // Track tengah
   int numCarsInner = 6;    // Track dalam
 
   // Ukuran track dalam cells per track (semakin besar track, semakin banyak cells)
@@ -81,8 +81,8 @@ private:
 
   // Jumlah garis radial per mobil (per track)
   int numLinesPerCarOuter = 10;    // Track luar - lebih banyak garis
-  int numLinesPerCarMiddle = 3;   // Track tengah
-  int numLinesPerCarInner = 4;    // Track dalam - lebih sedikit garis
+  int numLinesPerCarMiddle = 10;   // Track tengah
+  int numLinesPerCarInner = 10;    // Track dalam - lebih sedikit garis
 
   // Intensitas kelengkungan garis radial per track
   float curveIntensityOuter = .0f;   // Track luar - lurus

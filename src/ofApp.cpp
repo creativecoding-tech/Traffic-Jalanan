@@ -298,23 +298,34 @@ void ofApp::keyPressed(int key) {
   }
 
   // Kontrol curveIntensity untuk track luar (outer)
-  // '+' untuk menambah 0.1, '-' untuk mengurangi 0.1
   if (key == '=' || key == '+') {  // '=' biasanya '+' tanpa shift
     curveIntensityOuter += 0.1f;
-    // Update track outer (index 0)
-    if (!tracks.empty()) {
-      tracks[0].curveIntensity = curveIntensityOuter;
-    }
-    ofLog() << "curveIntensityOuter: " << curveIntensityOuter;
+    if (!tracks.empty())tracks[0].curveIntensity = curveIntensityOuter;
+    
   }
 
   if (key == '-' || key == '_') {  // '_' biasanya '-' tanpa shift
-    curveIntensityOuter -= 0.1f;
-    // Update track outer (index 0)
-    if (!tracks.empty()) {
-      tracks[0].curveIntensity = curveIntensityOuter;
-    }
-    ofLog() << "curveIntensityOuter: " << curveIntensityOuter;
+      curveIntensityOuter -= 0.1f;
+      if (!tracks.empty()) tracks[0].curveIntensity = curveIntensityOuter;
+      
+  }
+  
+  if (key == ']' || key == '}') {
+      curveIntensityMiddle += 0.1f;
+      if (!tracks.empty()) tracks[1].curveIntensity = curveIntensityMiddle;
+  }
+  if (key == '[' || key == '{') {
+      curveIntensityMiddle -= 0.1f;
+      if (!tracks.empty()) tracks[1].curveIntensity = curveIntensityMiddle;
+  }
+
+  if (key == '.' || key == '>') {
+      curveIntensityInner += 0.1f;
+      if (!tracks.empty()) tracks[2].curveIntensity = curveIntensityInner;
+  }
+  if (key == ',' || key == '<') {
+      curveIntensityInner -= 0.1f;
+      if (!tracks.empty()) tracks[2].curveIntensity = curveIntensityInner;
   }
 
   // Keluar dengan tombol 'q' atau 'Q'
