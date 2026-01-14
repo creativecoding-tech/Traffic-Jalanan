@@ -239,8 +239,8 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
       float lineAngle = atan2(p3.y - p0.y, p3.x - p0.x);
 
       // P1 di posisi perpendicular (+90 derajat) - melengkung satu arah
-      ofPoint p1(p0.x + cos(lineAngle + HALF_PI) * curveAmount,
-                 p0.y + sin(lineAngle + HALF_PI) * curveAmount);
+      ofPoint p1(p0.x + cos(lineAngle + (HALF_PI / 2 )) * curveAmount,
+                 p0.y + sin(lineAngle + (HALF_PI/2)) * curveAmount);
 
       // P2 di posisi perpendicular (-90 derajat) - melengkung arah berlawanan
       ofPoint p2(p0.x + cos(lineAngle - HALF_PI) * curveAmount,
@@ -289,6 +289,26 @@ void ofApp::keyPressed(int key) {
     for (auto &track : tracks) {
       track.regenerateRoad(currentRoadType);
     }
+  }
+
+  // Kontrol curveIntensity untuk track luar (outer)
+  // '+' untuk menambah 0.1, '-' untuk mengurangi 0.1
+  if (key == '=' || key == '+') {  // '=' biasanya '+' tanpa shift
+    curveIntensityOuter += 0.1f;
+    // Update track outer (index 0)
+    if (!tracks.empty()) {
+      tracks[0].curveIntensity = curveIntensityOuter;
+    }
+    ofLog() << "curveIntensityOuter: " << curveIntensityOuter;
+  }
+
+  if (key == '-' || key == '_') {  // '_' biasanya '-' tanpa shift
+    curveIntensityOuter -= 0.1f;
+    // Update track outer (index 0)
+    if (!tracks.empty()) {
+      tracks[0].curveIntensity = curveIntensityOuter;
+    }
+    ofLog() << "curveIntensityOuter: " << curveIntensityOuter;
   }
 
   // Keluar dengan tombol 'q' atau 'Q'

@@ -82,7 +82,7 @@ private:
   int numLinesPerCarInner = 4;    // Track dalam - lebih sedikit garis
 
   // Intensitas kelengkungan garis radial per track
-  float curveIntensityOuter = .6f;   // Track luar - lurus
+  float curveIntensityOuter = .0f;   // Track luar - lurus
   float curveIntensityMiddle = 0.f;  // Track tengah - sedang melengkung
   float curveIntensityInner = 0.f;   // Track dalam - lebih melengkung
 
