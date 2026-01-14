@@ -27,7 +27,7 @@ void ofApp::setup() {
     ofRectangle bounds(50, 50, w - 100, h - 100);
     // Spawn mobil dengan maxVOuter, maxCellsOuter, numLinesPerCarOuter, curveIntensityOuter
     t.setup(bounds, numCarsOuter, 50, maxVOuter, probSlowOuter, maxCellsOuter, currentRoadType, numLinesPerCarOuter, curveIntensityOuter,
-            curveAngle1Outer, curveAngle2Outer);
+            curveAngle1Outer, curveAngle2Outer, directionOuter);
     tracks.push_back(t);
   }
 
@@ -38,7 +38,7 @@ void ofApp::setup() {
     ofRectangle bounds(200, 200, w - 400, h - 400);
     // Spawn mobil dengan maxVMiddle, maxCellsMiddle, numLinesPerCarMiddle, curveIntensityMiddle
     t.setup(bounds, numCarsMiddle, 50, maxVMiddle, probSlowMiddle, maxCellsMiddle, currentRoadType, numLinesPerCarMiddle, curveIntensityMiddle,
-            curveAngle1Middle, curveAngle2Middle);
+            curveAngle1Middle, curveAngle2Middle, directionMiddle);
     tracks.push_back(t);
   }
 
@@ -49,7 +49,7 @@ void ofApp::setup() {
     ofRectangle bounds(350, 350, w - 700, h - 700);
     // Spawn mobil dengan maxVInner, maxCellsInner, numLinesPerCarInner, curveIntensityInner
     t.setup(bounds, numCarsInner, 45, maxVInner, probSlowInner, maxCellsInner, currentRoadType, numLinesPerCarInner, curveIntensityInner,
-            curveAngle1Inner, curveAngle2Inner);
+            curveAngle1Inner, curveAngle2Inner, directionInner);
     tracks.push_back(t);
   }
 }
@@ -79,7 +79,7 @@ void ofApp::draw() {
   }
 
   // Gambar trail effect dan scene
-  ofSetColor(0, 35);
+  ofSetColor(0, 15);
   ofFill();
   ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
 
@@ -92,13 +92,14 @@ void ofApp::draw() {
 
 void ofApp::TrackInstance::setup(ofRectangle bounds, int numCars, int spacing,
                                  float maxV, float probSlow, int maxCells, RoadType roadType, int numLinesPerCar, float curveIntensity,
-                                 float curveAngle1, float curveAngle2) {
+                                 float curveAngle1, float curveAngle2, int direction) {
   this->bounds = bounds;
   this->maxCells = maxCells;
   this->numLinesPerCar = numLinesPerCar;  // Simpan numLinesPerCar untuk track ini
   this->curveIntensity = curveIntensity;  // Simpan curveIntensity untuk track ini
   this->curveAngle1 = curveAngle1;        // Simpan curveAngle1 untuk track ini
   this->curveAngle2 = curveAngle2;        // Simpan curveAngle2 untuk track ini
+  this->direction = direction;            // Simpan direction untuk track ini
 
   // 1. Road - buat berdasarkan roadType
   regenerateRoad(roadType);
@@ -135,7 +136,7 @@ void ofApp::TrackInstance::update() {
   // 1. Reset Grid
   grid.assign(maxCells, -1);
 
-  // 2. Map Vehicles to Grid
+  // 2. Map Vehicles to Grid (NORMAL untuk SEMUA direction)
   for (int i = 0; i < traffic.size(); i++) {
     int pos = (int)traffic[i]->getDistance();
     pos = pos % maxCells;
@@ -191,6 +192,12 @@ void ofApp::TrackInstance::update() {
 
       for (float d : segments) {
         float worldD = d * (roadLen / maxCells);
+
+        // Jika direction -1, reverse distance untuk world positioning
+        if (direction == -1) {
+          worldD = roadLen - worldD;
+        }
+
         bodyPoints.push_back(road->getPointAtDistance(worldD));
       }
 
@@ -206,6 +213,12 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
   // Draw Vehicles
   for (auto &vehicle : traffic) {
     float dist = vehicle->getDistance() * (road->getTotalLength() / maxCells);
+
+    // Jika direction = -1 (clockwise), reverse distance
+    if (direction == -1) {
+      dist = road->getTotalLength() - dist;
+    }
+
     vec2 pos = road->getPointAtDistance(dist);
     vec2 tangent = road->getTangentAtDistance(dist);
     float angle = ofRadToDeg(atan2(tangent.y, tangent.x));
@@ -267,7 +280,7 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
       ofSetColor(col.r * 255, col.g * 255, col.b * 255, alpha);
 
       // Gambar bezier polyline sebagai garis kontinu (lebih mulus)
-      ofSetLineWidth(2.0);
+      ofSetLineWidth(5);
       bezierPolyline.draw();
     }
   }
