@@ -77,7 +77,7 @@ private:
   float maxVInner = 10.0f;    // Track dalam - paling lambat
 
   // Jumlah garis radial per mobil (per track)
-  int numLinesPerCarOuter = 6;    // Track luar - lebih banyak garis
+  int numLinesPerCarOuter = 3;    // Track luar - lebih banyak garis
   int numLinesPerCarMiddle = 3;   // Track tengah
   int numLinesPerCarInner = 4;    // Track dalam - lebih sedikit garis
 
@@ -87,7 +87,7 @@ private:
   float curveIntensityInner = 0.f;   // Track dalam - lebih melengkung
 
   // Probabilitas random braking per track (semakin kecil, semakin lancar)
-  float probSlowOuter = 0.5f;   // Track luar
+  float probSlowOuter = 0.3f;   // Track luar
   float probSlowMiddle = 0.15f;  // Track tengah
   float probSlowInner = 0.25f;   // Track dalam
 

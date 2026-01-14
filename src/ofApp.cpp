@@ -221,8 +221,9 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
 
     // Loop untuk setiap garis
     for(int lineIdx = 0; lineIdx < numLinesPerCar; lineIdx++) {
-      // Offset angle untuk posisi tersebar di sekeliling mobil (0 - 360 derajat)
-      float spreadAngle = ofMap(lineIdx, 0, numLinesPerCar, 0, TWO_PI);
+      // Offset angle untuk posisi tersebar merata di sekeliling mobil
+      // Bagi lingkaran penuh (TWO_PI) dengan jumlah garis
+      float spreadAngle = lineIdx * (TWO_PI / numLinesPerCar);
 
       // P0 = Pusat layar
       // P3 = Titik TEPAT di pinggir luar mobil
@@ -230,15 +231,18 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
                  carPos.y + sin(spreadAngle) * (carRadius + gap));
 
       // Control points: P1 dan P2
-      // Diposisikan PERPENDICULAR (90 derajat) dari arah radial ke mobil
-      // Ini membuat kurva melengkung ke samping, bukan lurus ke depan
+      // Diposisikan PERPENDICULAR (90 derajat) dari arah GARIS INI
+      // Setiap garis melengkung sesuai arahnya sendiri
       float curveAmount = radius * curveIntensity;
 
-      // P1 dan P2 sama-sama di posisi perpendicular (angleToCar + 90 derajat)
-      ofPoint p1(p0.x + cos(angleToCar + HALF_PI) * curveAmount,
-                 p0.y + sin(angleToCar + HALF_PI) * curveAmount);
-      ofPoint p2(p0.x + cos(angleToCar + HALF_PI) * curveAmount,
-                 p0.y + sin(angleToCar + HALF_PI) * curveAmount);
+      // Hitung angle untuk garis ini (dari pusat ke P3)
+      float lineAngle = atan2(p3.y - p0.y, p3.x - p0.x);
+
+      // P1 dan P2 sama-sama di posisi perpendicular dari garis ini (lineAngle + 90 derajat)
+      ofPoint p1(p0.x + cos(lineAngle + HALF_PI) * curveAmount,
+                 p0.y + sin(lineAngle + HALF_PI) * curveAmount);
+      ofPoint p2(p0.x + cos(lineAngle + HALF_PI) * curveAmount,
+                 p0.y + sin(lineAngle + HALF_PI) * curveAmount);
 
       // Tessellate bezier curve
       ofPolyline bezierPolyline;
