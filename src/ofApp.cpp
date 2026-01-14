@@ -238,7 +238,7 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
       // Hitung angle untuk garis ini (dari pusat ke P3)
       float lineAngle = atan2(p3.y - p0.y, p3.x - p0.x);
 
-      // P1 di posisi perpendicular (+90 derajat) - melengkung satu arah
+      // P1 di posisi perpendicular - melengkung satu arah
       ofPoint p1(p0.x + cos(lineAngle + (HALF_PI / 2 )) * curveAmount,
                  p0.y + sin(lineAngle + (HALF_PI/2)) * curveAmount);
 
