@@ -25,8 +25,8 @@ void ofApp::setup() {
     TrackInstance t;
     // Bounds: full screen minus margin
     ofRectangle bounds(50, 50, w - 100, h - 100);
-    // Spawn mobil dengan maxVOuter, maxCellsOuter
-    t.setup(bounds, numCarsOuter, 50, maxVOuter, probSlowOuter, maxCellsOuter, currentRoadType);
+    // Spawn mobil dengan maxVOuter, maxCellsOuter, numLinesPerCarOuter, curveIntensityOuter
+    t.setup(bounds, numCarsOuter, 50, maxVOuter, probSlowOuter, maxCellsOuter, currentRoadType, numLinesPerCarOuter, curveIntensityOuter);
     tracks.push_back(t);
   }
 
@@ -35,8 +35,8 @@ void ofApp::setup() {
   {
     TrackInstance t;
     ofRectangle bounds(200, 200, w - 400, h - 400);
-    // Spawn mobil dengan maxVMiddle, maxCellsMiddle
-    t.setup(bounds, numCarsMiddle, 50, maxVMiddle, probSlowMiddle, maxCellsMiddle, currentRoadType);
+    // Spawn mobil dengan maxVMiddle, maxCellsMiddle, numLinesPerCarMiddle, curveIntensityMiddle
+    t.setup(bounds, numCarsMiddle, 50, maxVMiddle, probSlowMiddle, maxCellsMiddle, currentRoadType, numLinesPerCarMiddle, curveIntensityMiddle);
     tracks.push_back(t);
   }
 
@@ -45,8 +45,8 @@ void ofApp::setup() {
   {
     TrackInstance t;
     ofRectangle bounds(350, 350, w - 700, h - 700);
-    // Spawn mobil dengan maxVInner, maxCellsInner
-    t.setup(bounds, numCarsInner, 45, maxVInner, probSlowInner, maxCellsInner, currentRoadType);
+    // Spawn mobil dengan maxVInner, maxCellsInner, numLinesPerCarInner, curveIntensityInner
+    t.setup(bounds, numCarsInner, 45, maxVInner, probSlowInner, maxCellsInner, currentRoadType, numLinesPerCarInner, curveIntensityInner);
     tracks.push_back(t);
   }
 }
@@ -81,16 +81,18 @@ void ofApp::draw() {
   ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
 
   for (auto &track : tracks) {
-    track.draw(curveIntensity, numLinesPerCar, &ofApp::getBezierPoint);
+    track.draw(&ofApp::getBezierPoint);
   }
 }
 
 // ==================== TRACK INSTANCE IMPLEMENTATION ====================
 
 void ofApp::TrackInstance::setup(ofRectangle bounds, int numCars, int spacing,
-                                 float maxV, float probSlow, int maxCells, RoadType roadType) {
+                                 float maxV, float probSlow, int maxCells, RoadType roadType, int numLinesPerCar, float curveIntensity) {
   this->bounds = bounds;
   this->maxCells = maxCells;
+  this->numLinesPerCar = numLinesPerCar;  // Simpan numLinesPerCar untuk track ini
+  this->curveIntensity = curveIntensity;  // Simpan curveIntensity untuk track ini
 
   // 1. Road - buat berdasarkan roadType
   regenerateRoad(roadType);
@@ -191,7 +193,7 @@ void ofApp::TrackInstance::update() {
   }
 }
 
-void ofApp::TrackInstance::draw(float curveIntensity, int numLinesPerCar, ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint)) {
+void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint)) {
   // Road tidak ditampilkan (hanya mobil & garis radial)
   // road->draw();
 
@@ -228,14 +230,15 @@ void ofApp::TrackInstance::draw(float curveIntensity, int numLinesPerCar, ofPoin
                  carPos.y + sin(spreadAngle) * (carRadius + gap));
 
       // Control points: P1 dan P2
-      // P1 dekat P0 (30% jarak menuju mobil)
-      ofPoint p1(p0.x + cos(angleToCar) * radius * 0.3f,
-                 p0.y + sin(angleToCar) * radius * 0.3f);
+      // Diposisikan PERPENDICULAR (90 derajat) dari arah radial ke mobil
+      // Ini membuat kurva melengkung ke samping, bukan lurus ke depan
+      float curveAmount = radius * curveIntensity;
 
-      // P2 di proyeksi radial dari pusat mobil, TAPI SEBELUM P3
-      // Ini membuat kurva tidak memotong lingkaran mobil
-      ofPoint p2(carPos.x + cos(spreadAngle) * (carRadius + gap) * 0.6f,
-                 carPos.y + sin(spreadAngle) * (carRadius + gap) * 0.6f);
+      // P1 dan P2 sama-sama di posisi perpendicular (angleToCar + 90 derajat)
+      ofPoint p1(p0.x + cos(angleToCar + HALF_PI) * curveAmount,
+                 p0.y + sin(angleToCar + HALF_PI) * curveAmount);
+      ofPoint p2(p0.x + cos(angleToCar + HALF_PI) * curveAmount,
+                 p0.y + sin(angleToCar + HALF_PI) * curveAmount);
 
       // Tessellate bezier curve
       ofPolyline bezierPolyline;

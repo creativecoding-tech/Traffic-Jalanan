@@ -44,12 +44,14 @@ private:
     std::vector<std::shared_ptr<Vehicle>> traffic;
     std::vector<int> grid;
     int maxCells;
+    int numLinesPerCar;  // Jumlah garis per mobil untuk track ini
+    float curveIntensity; // Intensitas kelengkungan garis radial
 
     // Helper to update this track
     void setup(ofRectangle bounds, int numCars, int spacing, float maxV,
-               float probSlow, int maxCells, RoadType roadType);
+               float probSlow, int maxCells, RoadType roadType, int numLinesPerCar, float curveIntensity);
     void update();
-    void draw(float curveIntensity, int numLinesPerCar, ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint));
+    void draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint));
     void regenerateRoad(RoadType roadType);  // Switch road type
   };
 
@@ -74,19 +76,23 @@ private:
   float maxVMiddle = 15.0f;   // Track tengah - sedang
   float maxVInner = 10.0f;    // Track dalam - paling lambat
 
+  // Jumlah garis radial per mobil (per track)
+  int numLinesPerCarOuter = 6;    // Track luar - lebih banyak garis
+  int numLinesPerCarMiddle = 3;   // Track tengah
+  int numLinesPerCarInner = 4;    // Track dalam - lebih sedikit garis
+
+  // Intensitas kelengkungan garis radial per track
+  float curveIntensityOuter = .6f;   // Track luar - lurus
+  float curveIntensityMiddle = 0.f;  // Track tengah - sedang melengkung
+  float curveIntensityInner = 0.f;   // Track dalam - lebih melengkung
+
   // Probabilitas random braking per track (semakin kecil, semakin lancar)
-  float probSlowOuter = 0.9f;   // Track luar
+  float probSlowOuter = 0.5f;   // Track luar
   float probSlowMiddle = 0.15f;  // Track tengah
   float probSlowInner = 0.25f;   // Track dalam
 
   // Bezier curve helper (dari TestModelNaSch)
   static ofPoint getBezierPoint(float t, ofPoint p0, ofPoint p1, ofPoint p2, ofPoint p3);
-
-  // Parameter untuk intensitas kurva garis radial
-  float curveIntensity = 0.f;
-
-  // Jumlah garis radial per mobil
-  int numLinesPerCar = 3;
 
   // Simulation control
   bool simulationStarted = false;  // Simulasi belum mulai sampai tekan 's' atau 'S'
