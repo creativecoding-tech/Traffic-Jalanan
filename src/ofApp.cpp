@@ -222,22 +222,20 @@ void ofApp::TrackInstance::draw(float curveIntensity, int numLinesPerCar, ofPoin
       // Offset angle untuk posisi tersebar di sekeliling mobil (0 - 360 derajat)
       float spreadAngle = ofMap(lineIdx, 0, numLinesPerCar, 0, TWO_PI);
 
-      // Curve amount untuk kontrol kelengkungan garis
-      float curveAmount = radius * curveIntensity * (1.0f + lineIdx * 0.1f);
+      // P0 = Pusat layar
+      // P3 = Titik TEPAT di pinggir luar mobil
+      ofPoint p3(carPos.x + cos(spreadAngle) * (carRadius + gap),
+                 carPos.y + sin(spreadAngle) * (carRadius + gap));
 
-      // Control points untuk bezier
-      // P1 dan P2 di tengah-tengah, variasi sedikit berdasarkan lineIdx
-      float midRadius = radius * 0.5f;  // Titik kontrol di tengah jarak
-      ofPoint p1(cos(angleToCar + HALF_PI) * curveAmount * 0.3f + p0.x,
-                 sin(angleToCar + HALF_PI) * curveAmount * 0.3f + p0.y);
-      ofPoint p2(cos(angleToCar - HALF_PI) * curveAmount * 0.3f + p0.x,
-                 sin(angleToCar - HALF_PI) * curveAmount * 0.3f + p0.y);
+      // Control points: P1 dan P2
+      // P1 dekat P0 (30% jarak menuju mobil)
+      ofPoint p1(p0.x + cos(angleToCar) * radius * 0.3f,
+                 p0.y + sin(angleToCar) * radius * 0.3f);
 
-      // Titik akhir di sekeliling mobil!
-      // Posisi tersebar mengelilingi mobil
-      float distToEdge = carRadius + gap;  // Jarak dari pusat mobil ke pinggir luar (+ gap)
-      ofPoint p3(carPos.x + cos(spreadAngle) * distToEdge,
-                 carPos.y + sin(spreadAngle) * distToEdge);
+      // P2 di proyeksi radial dari pusat mobil, TAPI SEBELUM P3
+      // Ini membuat kurva tidak memotong lingkaran mobil
+      ofPoint p2(carPos.x + cos(spreadAngle) * (carRadius + gap) * 0.6f,
+                 carPos.y + sin(spreadAngle) * (carRadius + gap) * 0.6f);
 
       // Tessellate bezier curve
       ofPolyline bezierPolyline;

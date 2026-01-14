@@ -122,13 +122,14 @@ void SedanCar::drawBody() {
 
   if (v < 0.1f) {
     // Macet - warna merah
-    renderCol = ofColor(255, 0, 0);
+    renderCol = ofColor(0, 0, 0);
   } else {
     // Jalan - warna mobil
     renderCol = ofColor(col.r * 255, col.g * 255, col.b * 255);
+    // Gambar circle dengan alpha 150
+    ofSetColor(renderCol, 150);
+    ofFill();
+    ofDrawCircle(pos.x, pos.y, size);
   }
 
-  // Gambar circle dengan alpha 150
-  ofSetColor(renderCol, 150);
-  ofDrawCircle(pos.x, pos.y, size);
 }
