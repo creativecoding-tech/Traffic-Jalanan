@@ -8,7 +8,6 @@ void ofApp::setup() {
   ofSetFrameRate(60);
   ofSetEscapeQuitsApp(false);
   ofSetBackgroundAuto(false);
-  ofDisableAlphaBlending();
   ofEnableAntiAliasing();
   ofEnableSmoothing();
 

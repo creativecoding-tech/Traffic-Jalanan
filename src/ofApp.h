@@ -61,7 +61,7 @@ private:
   int maxCells = 600;  // Default 600 (doubled dari 300)
 
   // Probabilitas random braking per track (semakin kecil, semakin lancar)
-  float probSlowOuter = 0.3f;   // Track luar - sangat lancar (3% ngaco)
+  float probSlowOuter = 0.02f;   // Track luar - sangat lancar (3% ngaco)
   float probSlowMiddle = 0.15f;  // Track tengah - lancar (15% ngaco)
   float probSlowInner = 0.25f;   // Track dalam - sedang (25% ngaco)
 
