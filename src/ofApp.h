@@ -75,7 +75,7 @@ private:
   float maxVInner = 10.0f;    // Track dalam - paling lambat
 
   // Probabilitas random braking per track (semakin kecil, semakin lancar)
-  float probSlowOuter = 0.002f;   // Track luar
+  float probSlowOuter = 0.2f;   // Track luar
   float probSlowMiddle = 0.15f;  // Track tengah
   float probSlowInner = 0.25f;   // Track dalam
 

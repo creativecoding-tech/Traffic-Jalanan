@@ -211,9 +211,20 @@ void ofApp::TrackInstance::draw(float curveIntensity, int numLinesPerCar, ofPoin
     float radius = glm::length(carPos - vec2(p0.x, p0.y));
     vec3 col = vehicle->getColor();
 
+    // Hitung radius mobil (berdasarkan velocity)
+    float v = vehicle->getVelocity();
+    float carDiameter = ofMap(v, 0, 15, 20, 10);  // Diameter mobil (10-20 pixel)
+    float carRadius = carDiameter / 2.0f;            // Radius mobil
+
+    // Titik akhir di pinggir luar mobil + gap kecil supaya tidak menyentuh
+    float gap = 5.0f;  // Gap 5 pixel dari pinggir mobil
+    float distToEdge = radius - carRadius - gap;
+    ofPoint p3_carPos(cos(angleToCar) * distToEdge + p0.x,
+                       sin(angleToCar) * distToEdge + p0.y);
+
     // Loop untuk setiap garis
     for(int lineIdx = 0; lineIdx < numLinesPerCar; lineIdx++) {
-      // Hitung offset angle untuk setiap garis (spread sekitar angleToCar)
+      // Hitung offset angle untuk variasi control points
       float angleOffset = ofMap(lineIdx, 0, numLinesPerCar - 1,
                                  -PI / 6, PI / 6); // Spread 60 derajat total
       float lineAngle = angleToCar + angleOffset;
@@ -225,7 +236,9 @@ void ofApp::TrackInstance::draw(float curveIntensity, int numLinesPerCar, ofPoin
       ofPoint p1(cos(lineAngle + HALF_PI) * curveAmount + p0.x,
                  sin(lineAngle + HALF_PI) * curveAmount + p0.y);
       ofPoint p2(p1.x, p1.y);
-      ofPoint p3(carPos.x, carPos.y);
+
+      // Titik akhir selalu ke mobil (tidak divariasi!)
+      ofPoint p3(p3_carPos);
 
       // Tessellate bezier curve
       ofPolyline bezierPolyline;
