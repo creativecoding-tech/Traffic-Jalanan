@@ -166,8 +166,8 @@ void ofApp::TrackInstance::update() {
 }
 
 void ofApp::TrackInstance::draw(float curveIntensity, int numLinesPerCar, ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint)) {
-  // Draw Road
-  road->draw();
+  // Draw Road - DIHILANGKAN (tidak ditampilkan)
+  // road->draw();
 
   // Draw Vehicles
   for (auto &vehicle : traffic) {
