@@ -25,8 +25,8 @@ void ofApp::setup() {
     TrackInstance t;
     // Bounds: full screen minus margin
     ofRectangle bounds(50, 50, w - 100, h - 100);
-    // Spawn mobil dari parameter numCarsOuter, probSlowOuter, maxCells
-    t.setup(bounds, numCarsOuter, 50, maxV, probSlowOuter, maxCells);
+    // Spawn mobil dari parameter numCarsOuter, probSlowOuter, maxCells, dan road type
+    t.setup(bounds, numCarsOuter, 50, maxV, probSlowOuter, maxCells, currentRoadType);
     tracks.push_back(t);
   }
 
@@ -35,8 +35,8 @@ void ofApp::setup() {
   {
     TrackInstance t;
     ofRectangle bounds(200, 200, w - 400, h - 400);
-    // Spawn mobil dari parameter numCarsMiddle, probSlowMiddle, maxCells
-    t.setup(bounds, numCarsMiddle, 50, maxV * 0.8f, probSlowMiddle, maxCells);
+    // Spawn mobil dari parameter numCarsMiddle, probSlowMiddle, maxCells, dan road type
+    t.setup(bounds, numCarsMiddle, 50, maxV * 0.8f, probSlowMiddle, maxCells, currentRoadType);
     tracks.push_back(t);
   }
 
@@ -45,8 +45,8 @@ void ofApp::setup() {
   {
     TrackInstance t;
     ofRectangle bounds(350, 350, w - 700, h - 700);
-    // Spawn mobil dari parameter numCarsInner, probSlowInner, maxCells
-    t.setup(bounds, numCarsInner, 45, maxV * 0.6f, probSlowInner, maxCells);
+    // Spawn mobil dari parameter numCarsInner, probSlowInner, maxCells, dan road type
+    t.setup(bounds, numCarsInner, 45, maxV * 0.6f, probSlowInner, maxCells, currentRoadType);
     tracks.push_back(t);
   }
 }
@@ -88,12 +88,12 @@ void ofApp::draw() {
 // ==================== TRACK INSTANCE IMPLEMENTATION ====================
 
 void ofApp::TrackInstance::setup(ofRectangle bounds, int numCars, int spacing,
-                                 float maxV, float probSlow, int maxCells) {
-  this->maxCells = maxCells; // Gunakan parameter maxCells, bukan hardcoded 300
+                                 float maxV, float probSlow, int maxCells, RoadType roadType) {
+  this->bounds = bounds;
+  this->maxCells = maxCells;
 
-  // 1. Road
-  road = std::make_shared<CurvedRoad>();
-  road->generatePath(bounds);
+  // 1. Road - buat berdasarkan roadType
+  regenerateRoad(roadType);
 
   // 2. Grid
   grid.resize(maxCells);
@@ -109,6 +109,18 @@ void ofApp::TrackInstance::setup(ofRectangle bounds, int numCars, int spacing,
     traffic.push_back(std::make_shared<SedanCar>(startDist, 0.005f, color,
                                                  maxCells, maxV, probSlow));
   }
+}
+
+void ofApp::TrackInstance::regenerateRoad(RoadType roadType) {
+  // Buat road baru berdasarkan tipe
+  if (roadType == CIRCLE) {
+    road = std::make_shared<CircleRoad>();
+  } else {  // CURVED
+    road = std::make_shared<CurvedRoad>();
+  }
+
+  // Generate path dengan bounds yang tersimpan
+  road->generatePath(bounds);
 }
 
 void ofApp::TrackInstance::update() {
@@ -247,6 +259,23 @@ void ofApp::keyPressed(int key) {
   // Mulai simulasi dengan tombol 's' atau 'S'
   if (key == 's' || key == 'S') {
     simulationStarted = true;
+  }
+
+  // Switch road type: '1' = CircleRoad, '2' = CurvedRoad
+  if (key == '1') {
+    currentRoadType = CIRCLE;
+    // Regenerate semua track dengan CircleRoad
+    for (auto &track : tracks) {
+      track.regenerateRoad(currentRoadType);
+    }
+  }
+
+  if (key == '2') {
+    currentRoadType = CURVED;
+    // Regenerate semua track dengan CurvedRoad
+    for (auto &track : tracks) {
+      track.regenerateRoad(currentRoadType);
+    }
   }
 
   // Keluar dengan tombol 'q' atau 'Q'
