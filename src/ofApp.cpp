@@ -53,6 +53,11 @@ void ofApp::setup() {
 
 //--------------------------------------------------------------
 void ofApp::update() {
+  // Hanya update jika simulasi sudah dimulai
+  if (!simulationStarted) {
+    return;
+  }
+
   for (auto &track : tracks) {
     track.update();
   }
@@ -61,6 +66,16 @@ void ofApp::update() {
 //--------------------------------------------------------------
 void ofApp::draw() {
   ofSetBackgroundAuto(false);
+
+  // Jika simulasi belum mulai, layar tetap hitam
+  if (!simulationStarted) {
+    ofSetColor(0);
+    ofFill();
+    ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
+    return;
+  }
+
+  // Gambar trail effect dan scene
   ofSetColor(0, 15);
   ofFill();
   ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
@@ -229,6 +244,12 @@ void ofApp::TrackInstance::draw(float curveIntensity, int numLinesPerCar, ofPoin
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
+  // Mulai simulasi dengan tombol 's' atau 'S'
+  if (key == 's' || key == 'S') {
+    simulationStarted = true;
+  }
+
+  // Keluar dengan tombol 'q' atau 'Q'
   if (key == 'q' || key == 'Q')
     ofExit();
 }

@@ -72,4 +72,7 @@ private:
 
   // Jumlah garis radial per mobil (default 5)
   int numLinesPerCar = 5;
+
+  // Simulation control
+  bool simulationStarted = false;  // Simulasi belum mulai sampai tekan 's' atau 'S'
 };
