@@ -46,10 +46,13 @@ private:
     int maxCells;
     int numLinesPerCar;  // Jumlah garis per mobil untuk track ini
     float curveIntensity; // Intensitas kelengkungan garis radial
+    float curveAngle1;    // Angle offset untuk P1 (dalam radian)
+    float curveAngle2;    // Angle offset untuk P2 (dalam radian)
 
     // Helper to update this track
     void setup(ofRectangle bounds, int numCars, int spacing, float maxV,
-               float probSlow, int maxCells, RoadType roadType, int numLinesPerCar, float curveIntensity);
+               float probSlow, int maxCells, RoadType roadType, int numLinesPerCar, float curveIntensity,
+               float curveAngle1, float curveAngle2);
     void update();
     void draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint));
     void regenerateRoad(RoadType roadType);  // Switch road type
@@ -85,6 +88,16 @@ private:
   float curveIntensityOuter = .0f;   // Track luar - lurus
   float curveIntensityMiddle = 0.f;  // Track tengah - sedang melengkung
   float curveIntensityInner = 0.f;   // Track dalam - lebih melengkung
+
+  // Angle offset untuk P1 per track (dalam radian)
+  float curveAngle1Outer = HALF_PI / 2;      // Track luar - 45 derajat
+  float curveAngle1Middle = HALF_PI / 4;     // Track tengah
+  float curveAngle1Inner = HALF_PI;      // Track dalam
+
+  // Angle offset untuk P2 per track (dalam radian)
+  float curveAngle2Outer = -HALF_PI;         // Track luar - -90 derajat
+  float curveAngle2Middle = -HALF_PI;        // Track tengah
+  float curveAngle2Inner = -HALF_PI;         // Track dalam
 
   // Probabilitas random braking per track (semakin kecil, semakin lancar)
   float probSlowOuter = 0.03f;   // Track luar

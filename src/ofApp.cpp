@@ -26,7 +26,8 @@ void ofApp::setup() {
     // Bounds: full screen minus margin
     ofRectangle bounds(50, 50, w - 100, h - 100);
     // Spawn mobil dengan maxVOuter, maxCellsOuter, numLinesPerCarOuter, curveIntensityOuter
-    t.setup(bounds, numCarsOuter, 50, maxVOuter, probSlowOuter, maxCellsOuter, currentRoadType, numLinesPerCarOuter, curveIntensityOuter);
+    t.setup(bounds, numCarsOuter, 50, maxVOuter, probSlowOuter, maxCellsOuter, currentRoadType, numLinesPerCarOuter, curveIntensityOuter,
+            curveAngle1Outer, curveAngle2Outer);
     tracks.push_back(t);
   }
 
@@ -36,7 +37,8 @@ void ofApp::setup() {
     TrackInstance t;
     ofRectangle bounds(200, 200, w - 400, h - 400);
     // Spawn mobil dengan maxVMiddle, maxCellsMiddle, numLinesPerCarMiddle, curveIntensityMiddle
-    t.setup(bounds, numCarsMiddle, 50, maxVMiddle, probSlowMiddle, maxCellsMiddle, currentRoadType, numLinesPerCarMiddle, curveIntensityMiddle);
+    t.setup(bounds, numCarsMiddle, 50, maxVMiddle, probSlowMiddle, maxCellsMiddle, currentRoadType, numLinesPerCarMiddle, curveIntensityMiddle,
+            curveAngle1Middle, curveAngle2Middle);
     tracks.push_back(t);
   }
 
@@ -46,7 +48,8 @@ void ofApp::setup() {
     TrackInstance t;
     ofRectangle bounds(350, 350, w - 700, h - 700);
     // Spawn mobil dengan maxVInner, maxCellsInner, numLinesPerCarInner, curveIntensityInner
-    t.setup(bounds, numCarsInner, 45, maxVInner, probSlowInner, maxCellsInner, currentRoadType, numLinesPerCarInner, curveIntensityInner);
+    t.setup(bounds, numCarsInner, 45, maxVInner, probSlowInner, maxCellsInner, currentRoadType, numLinesPerCarInner, curveIntensityInner,
+            curveAngle1Inner, curveAngle2Inner);
     tracks.push_back(t);
   }
 }
@@ -76,7 +79,7 @@ void ofApp::draw() {
   }
 
   // Gambar trail effect dan scene
-  ofSetColor(0, 15);
+  ofSetColor(0, 9);
   ofFill();
   ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
 
@@ -88,11 +91,14 @@ void ofApp::draw() {
 // ==================== TRACK INSTANCE IMPLEMENTATION ====================
 
 void ofApp::TrackInstance::setup(ofRectangle bounds, int numCars, int spacing,
-                                 float maxV, float probSlow, int maxCells, RoadType roadType, int numLinesPerCar, float curveIntensity) {
+                                 float maxV, float probSlow, int maxCells, RoadType roadType, int numLinesPerCar, float curveIntensity,
+                                 float curveAngle1, float curveAngle2) {
   this->bounds = bounds;
   this->maxCells = maxCells;
   this->numLinesPerCar = numLinesPerCar;  // Simpan numLinesPerCar untuk track ini
   this->curveIntensity = curveIntensity;  // Simpan curveIntensity untuk track ini
+  this->curveAngle1 = curveAngle1;        // Simpan curveAngle1 untuk track ini
+  this->curveAngle2 = curveAngle2;        // Simpan curveAngle2 untuk track ini
 
   // 1. Road - buat berdasarkan roadType
   regenerateRoad(roadType);
@@ -238,13 +244,13 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
       // Hitung angle untuk garis ini (dari pusat ke P3)
       float lineAngle = atan2(p3.y - p0.y, p3.x - p0.x);
 
-      // P1 di posisi perpendicular - melengkung satu arah
-      ofPoint p1(p0.x + cos(lineAngle + (HALF_PI / 2 )) * curveAmount,
-                 p0.y + sin(lineAngle + (HALF_PI/2)) * curveAmount);
+      // P1 di posisi dengan angle offset dari track ini (curveAngle1)
+      ofPoint p1(p0.x + cos(lineAngle + curveAngle1) * curveAmount,
+                 p0.y + sin(lineAngle + curveAngle1) * curveAmount);
 
-      // P2 di posisi perpendicular (-90 derajat) - melengkung arah berlawanan
-      ofPoint p2(p0.x + cos(lineAngle - HALF_PI) * curveAmount,
-                 p0.y + sin(lineAngle - HALF_PI) * curveAmount);
+      // P2 di posisi dengan angle offset dari track ini (curveAngle2)
+      ofPoint p2(p0.x + cos(lineAngle + curveAngle2) * curveAmount,
+                 p0.y + sin(lineAngle + curveAngle2) * curveAmount);
 
       // Tessellate bezier curve dengan lebih banyak segment untuk kelihatan mulus
       ofPolyline bezierPolyline;
