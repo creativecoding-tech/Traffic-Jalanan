@@ -76,8 +76,8 @@ private:
 
   // Kecepatan maksimal per track (track lebih besar = lebih cepat)
   float maxVOuter = 20.0f;    // Track luar - paling cepat
-  float maxVMiddle = 15.0f;   // Track tengah - sedang
-  float maxVInner = 10.0f;    // Track dalam - paling lambat
+  float maxVMiddle = 6.0f;   // Track tengah - sedang
+  float maxVInner = 5.0f;    // Track dalam - paling lambat
 
   // Jumlah garis radial per mobil (per track)
   int numLinesPerCarOuter = 10;    // Track luar - lebih banyak garis
@@ -96,12 +96,12 @@ private:
 
   // Angle offset untuk P2 per track (dalam radian)
   float curveAngle2Outer = -HALF_PI;         // Track luar - -90 derajat
-  float curveAngle2Middle = -HALF_PI;        // Track tengah
-  float curveAngle2Inner = -HALF_PI;         // Track dalam
+  float curveAngle2Middle = -HALF_PI / 4;        // Track tengah
+  float curveAngle2Inner = -HALF_PI / 2;         // Track dalam
 
   // Probabilitas random braking per track (semakin kecil, semakin lancar)
   float probSlowOuter = 0.03f;   // Track luar
-  float probSlowMiddle = 0.15f;  // Track tengah
+  float probSlowMiddle = 0.3f;  // Track tengah
   float probSlowInner = 0.25f;   // Track dalam
 
   // Bezier curve helper (dari TestModelNaSch)

@@ -79,7 +79,7 @@ void ofApp::draw() {
   }
 
   // Gambar trail effect dan scene
-  ofSetColor(0, 9);
+  ofSetColor(0, 35);
   ofFill();
   ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
 
