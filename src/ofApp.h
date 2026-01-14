@@ -52,15 +52,15 @@ private:
   const float maxV = 20.0f;       // Kecepatan maksimal base value
 
   // Jumlah mobil per track
-  int numCarsOuter = 10;   // Track luar
+  int numCarsOuter = 20;   // Track luar
   int numCarsMiddle = 8;   // Track tengah
   int numCarsInner = 6;    // Track dalam
 
   // Ukuran track dalam cells (semakin besar, semakin panjang tracknya)
-  int maxCells = 600;  // Default 600 (increased from 300)
+  int maxCells = 5000;  // Default 600 (increased from 300)
 
   // Probabilitas random braking per track (semakin kecil, semakin lancar)
-  float probSlowOuter = 0.02f;   // Track luar - sangat lancar (2% ngaco)
+  float probSlowOuter = 0.002f;   // Track luar - sangat lancar (2% ngaco)
   float probSlowMiddle = 0.15f;  // Track tengah - lancar (15% ngaco)
   float probSlowInner = 0.25f;   // Track dalam - sedang (25% ngaco)
 
@@ -71,7 +71,7 @@ private:
   float curveIntensity = 0.5f;
 
   // Jumlah garis radial per mobil (default 5)
-  int numLinesPerCar = 5;
+  int numLinesPerCar = 3;
 
   // Simulation control
   bool simulationStarted = false;  // Simulasi belum mulai sampai tekan 's' atau 'S'
