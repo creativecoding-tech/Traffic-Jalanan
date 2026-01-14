@@ -26,8 +26,8 @@ void ofApp::setup() {
     TrackInstance t;
     // Bounds: full screen minus margin
     ofRectangle bounds(50, 50, w - 100, h - 100);
-    // Spawn 6 mobil (jarak aman 60)
-    t.setup(bounds, 6, 60, maxV, probSlow);
+    // Spawn mobil dari parameter numCarsOuter, probSlowOuter, maxCells
+    t.setup(bounds, numCarsOuter, 50, maxV, probSlowOuter, maxCells);
     tracks.push_back(t);
   }
 
@@ -36,8 +36,8 @@ void ofApp::setup() {
   {
     TrackInstance t;
     ofRectangle bounds(200, 200, w - 400, h - 400);
-    // Spawn 4 mobil
-    t.setup(bounds, 4, 60, maxV * 0.8f, probSlow);
+    // Spawn mobil dari parameter numCarsMiddle, probSlowMiddle, maxCells
+    t.setup(bounds, numCarsMiddle, 50, maxV * 0.8f, probSlowMiddle, maxCells);
     tracks.push_back(t);
   }
 
@@ -46,8 +46,8 @@ void ofApp::setup() {
   {
     TrackInstance t;
     ofRectangle bounds(350, 350, w - 700, h - 700);
-    // Spawn 2 mobil
-    t.setup(bounds, 2, 50, maxV * 0.6f, probSlow);
+    // Spawn mobil dari parameter numCarsInner, probSlowInner, maxCells
+    t.setup(bounds, numCarsInner, 45, maxV * 0.6f, probSlowInner, maxCells);
     tracks.push_back(t);
   }
 }
@@ -74,9 +74,8 @@ void ofApp::draw() {
 // ==================== TRACK INSTANCE IMPLEMENTATION ====================
 
 void ofApp::TrackInstance::setup(ofRectangle bounds, int numCars, int spacing,
-                                 float maxV, float probSlow) {
-  this->maxCells =
-      300; // Tetap 300 cells untuk simplicity simulation resolution
+                                 float maxV, float probSlow, int maxCells) {
+  this->maxCells = maxCells; // Gunakan parameter maxCells, bukan hardcoded 300
 
   // 1. Road
   road = std::make_shared<CurvedRoad>();

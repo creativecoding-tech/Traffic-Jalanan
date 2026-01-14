@@ -100,49 +100,39 @@ void SedanCar::updateBody(const std::vector<glm::vec2> &newPoints) {
 }
 
 /**
- * Draw Bezier Trail
+ * Draw Simple Circle
  *
- * Gambar trail dengan bezier curve yang "melilit" seperti ular.
- * Menggunakan teknik dari GridBezier::setBezierMulurLR().
+ * Gambar mobil sebagai circle sederhana seperti TestModelNaSch.
+ * Size berdasarkan velocity (lambat = besar, cepat = kecil).
+ * Warna merah jika macet (v = 0).
  */
 void SedanCar::drawBody() {
   if (bodyPoints.size() < 1)
     return;
 
-  // Loop setiap segment body
-  // Kita gambar tiap titik sebagai circle/ellipse terpisah
-  // supaya terlihat "putus-putus" (segmented)
-  for (int i = 0; i < bodyPoints.size(); i++) {
-    vec2 pos = bodyPoints[i];
+  // Ambil posisi mobil (titik pertama = kepala)
+  vec2 pos = bodyPoints[0];
 
-    // Calculate orientation (angle)
-    float angle = 0.0f;
-    if (i < bodyPoints.size() - 1) {
-      vec2 dir = bodyPoints[i] - bodyPoints[i + 1]; // Arah ke belakang
-      angle = ofRadToDeg(atan2(dir.y, dir.x));
-    } else if (i > 0) {
-      vec2 dir = bodyPoints[i - 1] - bodyPoints[i]; // Arah dari depan
-      angle = ofRadToDeg(atan2(dir.y, dir.x));
-    }
+  // Ambil velocity
+  float v = getVelocity();
 
-    // Tapering size & alpha
-    // Tapering size & alpha
-    float alpha =
-        ofMap(i, 0, bodyPoints.size() - 1, 255, 100); // Alpha lebih solid
-    float size =
-        ofMap(i, 0, bodyPoints.size() - 1, 25, 10); // Size diperbesar LAGI
+  // Size berdasarkan velocity (lambat = besar, cepat = kecil)
+  // maxV disimpan di storedMaxV
+  float size = ofMap(v, 0, storedMaxV, 20, 10);
 
-    vec3 col = getColor();
-    ofSetColor(col.r * 255, col.g * 255, col.b * 255, alpha);
+  // Warna: merah jika macet (v ≈ 0), warna mobil jika jalan
+  vec3 col = getColor();
+  ofColor renderCol;
 
-    ofPushMatrix();
-    ofTranslate(pos.x, pos.y);
-    ofRotateDeg(angle);
-
-    // Gambar Ellipse panjang (seperti ruas jari/ulat)
-    // Width (panjang) = size * 1.5, Height (lebar) = size
-    ofDrawEllipse(0, 0, size * 1.5f, size);
-
-    ofPopMatrix();
+  if (v < 0.1f) {
+    // Macet - warna merah
+    renderCol = ofColor(255, 0, 0);
+  } else {
+    // Jalan - warna mobil
+    renderCol = ofColor(col.r * 255, col.g * 255, col.b * 255);
   }
+
+  // Gambar circle dengan alpha 150
+  ofSetColor(renderCol, 150);
+  ofDrawCircle(pos.x, pos.y, size);
 }
