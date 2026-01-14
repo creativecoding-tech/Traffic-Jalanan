@@ -231,22 +231,24 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
                  carPos.y + sin(spreadAngle) * (carRadius + gap));
 
       // Control points: P1 dan P2
-      // Diposisikan PERPENDICULAR (90 derajat) dari arah GARIS INI
-      // Setiap garis melengkung sesuai arahnya sendiri
+      // Untuk S-CURVE (lengkungan ganda), P1 dan P2 melengkung ke arah BERLAWANAN
+      // P1: +90 derajat, P2: -90 derajat dari arah garis
       float curveAmount = radius * curveIntensity;
 
       // Hitung angle untuk garis ini (dari pusat ke P3)
       float lineAngle = atan2(p3.y - p0.y, p3.x - p0.x);
 
-      // P1 dan P2 sama-sama di posisi perpendicular dari garis ini (lineAngle + 90 derajat)
+      // P1 di posisi perpendicular (+90 derajat) - melengkung satu arah
       ofPoint p1(p0.x + cos(lineAngle + HALF_PI) * curveAmount,
                  p0.y + sin(lineAngle + HALF_PI) * curveAmount);
-      ofPoint p2(p0.x + cos(lineAngle + HALF_PI) * curveAmount,
-                 p0.y + sin(lineAngle + HALF_PI) * curveAmount);
 
-      // Tessellate bezier curve
+      // P2 di posisi perpendicular (-90 derajat) - melengkung arah berlawanan
+      ofPoint p2(p0.x + cos(lineAngle - HALF_PI) * curveAmount,
+                 p0.y + sin(lineAngle - HALF_PI) * curveAmount);
+
+      // Tessellate bezier curve dengan lebih banyak segment untuk kelihatan mulus
       ofPolyline bezierPolyline;
-      int segments = 30;
+      int segments = 100;  // Tingkatkan dari 30 ke 100 untuk lebih smooth
 
       for(int k = 0; k <= segments; k++) {
         float t = (float)k / segments;
@@ -254,19 +256,13 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
         bezierPolyline.addVertex(p.x, p.y);
       }
 
-      // Gambar per segment dengan efek pulsing (offset per garis)
-      for(int k = 0; k < bezierPolyline.size() - 1; k++) {
-        float t = (float)k / bezierPolyline.size();
-        // Pulse offset berbeda untuk setiap garis biar tidak sinkron
-        float pulse = sin(t * TWO_PI + ofGetFrameNum() * 0.05f + lineIdx * 0.5f);
-        float lineWidth = ofMap(pulse, -1, 1, 1, 3);
-        ofSetLineWidth(lineWidth);
+      // Alpha bervariasi per garis
+      float alpha = ofMap(lineIdx, 0, numLinesPerCar - 1, 80, 150);
+      ofSetColor(col.r * 255, col.g * 255, col.b * 255, alpha);
 
-        // Alpha bervariasi per garis (garis tengah lebih solid)
-        float alpha = ofMap(lineIdx, 0, numLinesPerCar - 1, 80, 150);
-        ofSetColor(col.r * 255, col.g * 255, col.b * 255, alpha);
-        ofDrawLine(bezierPolyline[k], bezierPolyline[k + 1]);
-      }
+      // Gambar bezier polyline sebagai garis kontinu (lebih mulus)
+      ofSetLineWidth(2.0);
+      bezierPolyline.draw();
     }
   }
 }

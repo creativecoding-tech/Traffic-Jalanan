@@ -62,12 +62,12 @@ private:
   RoadType currentRoadType = CIRCLE;  // Default: CircleRoad
 
   // Jumlah mobil per track
-  int numCarsOuter = 10;   // Track luar
+  int numCarsOuter = 20;   // Track luar
   int numCarsMiddle = 8;   // Track tengah
   int numCarsInner = 6;    // Track dalam
 
   // Ukuran track dalam cells per track (semakin besar track, semakin banyak cells)
-  int maxCellsOuter = 800;   // Track luar - lebih panjang
+  int maxCellsOuter = 1500;   // Track luar - lebih panjang
   int maxCellsMiddle = 600;  // Track tengah
   int maxCellsInner = 400;   // Track dalam - lebih pendek
 
@@ -77,7 +77,7 @@ private:
   float maxVInner = 10.0f;    // Track dalam - paling lambat
 
   // Jumlah garis radial per mobil (per track)
-  int numLinesPerCarOuter = 3;    // Track luar - lebih banyak garis
+  int numLinesPerCarOuter = 10;    // Track luar - lebih banyak garis
   int numLinesPerCarMiddle = 3;   // Track tengah
   int numLinesPerCarInner = 4;    // Track dalam - lebih sedikit garis
 
@@ -87,7 +87,7 @@ private:
   float curveIntensityInner = 0.f;   // Track dalam - lebih melengkung
 
   // Probabilitas random braking per track (semakin kecil, semakin lancar)
-  float probSlowOuter = 0.3f;   // Track luar
+  float probSlowOuter = 0.03f;   // Track luar
   float probSlowMiddle = 0.15f;  // Track tengah
   float probSlowInner = 0.25f;   // Track dalam
 
