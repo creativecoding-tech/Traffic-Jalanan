@@ -110,7 +110,7 @@ private:
   float probSlowMiddle = 0.03f;  // Track tengah
   float probSlowInner = 0.03f;   // Track dalam
 
-  // Bezier curve helper (dari TestModelNaSch)
+  // Bezier curve helper
   static ofPoint getBezierPoint(float t, ofPoint p0, ofPoint p1, ofPoint p2, ofPoint p3);
 
   // Simulation control
