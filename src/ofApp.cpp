@@ -280,7 +280,7 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
       ofSetColor(col.r * 255, col.g * 255, col.b * 255, alpha);
 
       // Gambar bezier polyline sebagai garis kontinu (lebih mulus)
-      ofSetLineWidth(5);
+      ofSetLineWidth(3);
       bezierPolyline.draw();
     }
   }
