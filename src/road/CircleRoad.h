@@ -4,7 +4,7 @@
 /**
  * CircleRoad - Jalan berbentuk lingkaran sempurna
  *
- * Seperti di TestModelNaSch, jalan berbentuk circle penuh.
+ * Jalan berbentuk circle penuh.
  * Mobil bergerak searah jarum jam di sekeliling lingkaran.
  */
 class CircleRoad : public Road {
