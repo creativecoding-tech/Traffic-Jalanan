@@ -50,6 +50,7 @@ private:
     float curveAngle2;    // Angle offset untuk P2 (dalam radian)
     int direction;        // Arah putaran: 1 = counter-clockwise, -1 = clockwise
     bool visible;         // Visibility toggle untuk track ini
+    bool drawFromCenter;  // true: center→car, false: car→center
 
     // Helper to update this track
     void setup(ofRectangle bounds, int numCars, int spacing, float maxV,

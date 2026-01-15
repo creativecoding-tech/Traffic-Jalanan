@@ -29,6 +29,7 @@ void ofApp::setup() {
     t.setup(bounds, numCarsOuter, 50, maxVOuter, probSlowOuter, maxCellsOuter, currentRoadType, numLinesPerCarOuter, curveIntensityOuter,
             curveAngle1Outer, curveAngle2Outer, directionOuter);
     t.visible = true;  // Default visible
+    t.drawFromCenter = (ofRandom(1.0f) < 0.5f);  // Random: center→car atau car→center
     tracks.push_back(t);
   }
 
@@ -41,6 +42,7 @@ void ofApp::setup() {
     t.setup(bounds, numCarsMiddle, 50, maxVMiddle, probSlowMiddle, maxCellsMiddle, currentRoadType, numLinesPerCarMiddle, curveIntensityMiddle,
             curveAngle1Middle, curveAngle2Middle, directionMiddle);
     t.visible = true;  // Default visible
+    t.drawFromCenter = (ofRandom(1.0f) < 0.5f);  // Random: center→car atau car→center
     tracks.push_back(t);
   }
 
@@ -53,6 +55,7 @@ void ofApp::setup() {
     t.setup(bounds, numCarsInner, 45, maxVInner, probSlowInner, maxCellsInner, currentRoadType, numLinesPerCarInner, curveIntensityInner,
             curveAngle1Inner, curveAngle2Inner, directionInner);
     t.visible = true;  // Default visible
+    t.drawFromCenter = (ofRandom(1.0f) < 0.5f);  // Random: center→car atau car→center
     tracks.push_back(t);
   }
 }
@@ -234,11 +237,11 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
 
     vehicle->draw(pos.x, pos.y, angle);
 
-    // Gambar MULTIPLE garis radial bezier dari center screen ke mobil
+    // Gambar MULTIPLE garis radial bezier
     vec2 carPos(pos.x, pos.y);
-    ofPoint p0(ofGetWidth() / 2, ofGetHeight() / 2);
-    float angleToCar = atan2(carPos.y - p0.y, carPos.x - p0.x);
-    float radius = glm::length(carPos - vec2(p0.x, p0.y));
+    ofPoint centerPoint(ofGetWidth() / 2, ofGetHeight() / 2);
+    float angleToCar = atan2(carPos.y - centerPoint.y, carPos.x - centerPoint.x);
+    float radius = glm::length(carPos - vec2(centerPoint.x, centerPoint.y));
     vec3 col = vehicle->getColor();
 
     // Hitung radius mobil (berdasarkan velocity)
@@ -252,10 +255,21 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
       // Offset angle untuk posisi tersebar merata di sekeliling mobil
       float spreadAngle = lineIdx * (TWO_PI / numLinesPerCar);
 
-      // P0 = Pusat layar
-      // P3 = Titik TEPAT di pinggir luar mobil
-      ofPoint p3(carPos.x + cos(spreadAngle) * (carRadius + gap),
-                 carPos.y + sin(spreadAngle) * (carRadius + gap));
+      // Titik di pinggir luar mobil
+      ofPoint carEdgePoint(carPos.x + cos(spreadAngle) * (carRadius + gap),
+                           carPos.y + sin(spreadAngle) * (carRadius + gap));
+
+      // Tentukan P0 dan P3 berdasarkan drawFromCenter
+      ofPoint p0, p3;
+      if (drawFromCenter) {
+        // Dari center ke car
+        p0 = centerPoint;
+        p3 = carEdgePoint;
+      } else {
+        // Dari car ke center
+        p0 = carEdgePoint;
+        p3 = centerPoint;
+      }
 
       // Control points: P1 dan P2
       // Untuk S-CURVE (lengkungan ganda), P1 dan P2 melengkung ke arah BERLAWANAN
