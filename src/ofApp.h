@@ -51,6 +51,7 @@ private:
     int direction;        // Arah putaran: 1 = counter-clockwise, -1 = clockwise
     bool visible;         // Visibility toggle untuk track ini
     bool drawFromCenter;  // true: center→car, false: car→center
+    bool gradientMode;    // true: white→dark gradient, hide cars
 
     // Helper to update this track
     void setup(ofRectangle bounds, int numCars, int spacing, float maxV,
@@ -117,7 +118,6 @@ private:
 
   // Simulation control
   bool simulationStarted = false;  // Simulasi belum mulai sampai tekan 's' atau 'S'
-  bool gradientMode = false;       // Gradient mode: hide cars, bezier gradient white→dark
 
   // Road switching controls
   // '1' = CircleRoad (default, lingkaran sempurna)

@@ -30,6 +30,7 @@ void ofApp::setup() {
             curveAngle1Outer, curveAngle2Outer, directionOuter);
     t.visible = true;  // Default visible
     t.drawFromCenter = (ofRandom(1.0f) < 0.5f);  // Random: center→car atau car→center
+    t.gradientMode = false;  // Default: normal mode
     tracks.push_back(t);
   }
 
@@ -43,6 +44,7 @@ void ofApp::setup() {
             curveAngle1Middle, curveAngle2Middle, directionMiddle);
     t.visible = true;  // Default visible
     t.drawFromCenter = (ofRandom(1.0f) < 0.5f);  // Random: center→car atau car→center
+    t.gradientMode = false;  // Default: normal mode
     tracks.push_back(t);
   }
 
@@ -56,6 +58,7 @@ void ofApp::setup() {
             curveAngle1Inner, curveAngle2Inner, directionInner);
     t.visible = true;  // Default visible
     t.drawFromCenter = (ofRandom(1.0f) < 0.5f);  // Random: center→car atau car→center
+    t.gradientMode = false;  // Default: normal mode
     tracks.push_back(t);
   }
 }
@@ -95,7 +98,7 @@ void ofApp::draw() {
   for (auto &track : tracks) {
     // Hanya draw jika visible
     if (track.visible) {
-      track.draw(&ofApp::getBezierPoint, wobbleTime, gradientMode);
+      track.draw(&ofApp::getBezierPoint, wobbleTime, track.gradientMode);
     }
   }
 }
@@ -420,9 +423,25 @@ void ofApp::keyPressed(int key) {
     setup();         // Buat ulang semua track, mobil, dan bezier
   }
 
-  // Toggle gradient mode dengan 'W' atau 'w'
-  if (key == 'w' || key == 'W') {
-    gradientMode = !gradientMode;  // Toggle gradient mode
+  // Toggle gradient mode untuk OUTER track dengan 'T' atau 't'
+  if (key == 't' || key == 'T') {
+    if (!tracks.empty()) {
+      tracks[0].gradientMode = !tracks[0].gradientMode;
+    }
+  }
+
+  // Toggle gradient mode untuk MIDDLE track dengan 'Y' atau 'y'
+  if (key == 'y' || key == 'Y') {
+    if (tracks.size() > 1) {
+      tracks[1].gradientMode = !tracks[1].gradientMode;
+    }
+  }
+
+  // Toggle gradient mode untuk INNER track dengan 'U' atau 'u'
+  if (key == 'u' || key == 'U') {
+    if (tracks.size() > 2) {
+      tracks[2].gradientMode = !tracks[2].gradientMode;
+    }
   }
 
   // Keluar dengan tombol 'q' atau 'Q'
