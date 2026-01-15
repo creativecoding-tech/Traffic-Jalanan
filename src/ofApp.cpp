@@ -307,11 +307,9 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
           ofPoint p = bezierHelper(t, p0, p1, p2, p3);
           bezierMesh.addVertex(glm::vec3(p.x, p.y, 0.0f));
 
-          // Gradient dari hitam (0,0,0) ke orange (255,165,0)
-          float r = ofMap(t, 0.0f, 1.0f, 0.0f, 255.0f);
-          float g = ofMap(t, 0.0f, 1.0f, 0.0f, 165.0f);
-          float b = 0.0f;
-          bezierMesh.addColor(ofColor(r, g, b, 200));  // Alpha 200
+          // Gradient dari putih (255,255,255) ke gelap (0,0,0)
+          float val = ofMap(t, 0.0f, 1.0f, 255.0f, 0.0f);  // Reverse: 255→0
+          bezierMesh.addColor(ofColor(val, val, val, 200));  // Grayscale gradient, Alpha 200
         }
 
         // Gambar mesh dengan gradient
