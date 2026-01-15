@@ -284,7 +284,6 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
       // Hitung angle untuk garis ini (dari pusat ke P3)
       float lineAngle = atan2(p3.y - p0.y, p3.x - p0.x);
 
-      // APPLY DRAMATIC UNDERWATER WOBBLE!
       // Wobble besar supaya pasti kelihatan
       float wobble1 = sin(wobbleTime * 3.0f + lineIdx * 0.5f) * 85.0f;
       float wobble2 = cos(wobbleTime * 3.0f + lineIdx * 0.5f) * 85.0f;

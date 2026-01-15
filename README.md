@@ -3,7 +3,7 @@
 [![OpenFrameworks](https://img.shields.io/badge/OpenFrameworks-0.12.1-blue)](https://openframeworks.cc)
 [![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)](https://microsoft.com/windows)
 ![License](https://img.shields.io/badge/License-Apache%202.0-green)
-![Branch](https://img.shields.io/badge/Branch-corat--caret-success)
+![Branch](https://img.shields.io/badge/Branch-wobble--effect--polyline-success)
 
 [![Fund The Experiments](https://img.shields.io/badge/Fund-The_Experiments-FF5722?style=for-the-badge&logo=buy-me-a-coffee)](https://sociabuzz.com/abdkdhni)
 
@@ -37,11 +37,14 @@ Project ini menampilkan simulasi lalu lintas dengan __3 lintasan konsentris__ (O
 
 ### Visualization Features
 
-- __Radial Bezier Curves__ - Garis dari center layar ke setiap mobil dengan S-curve control points
+- __Radial Bezier Curves__ - Garis dari/ke center layar dengan S-curve control points (random direction)
+- __Wobble Effect__ - Organic movement pada bezier control points dengan sin/cos functions
 - __Dynamic Line Width__ - Ketebalan garis berdasarkan kecepatan kendaraan
 - __Trail Effect__ - Semi-transparent overlay untuk visual jejak yang menarik
 - __Multiple Lines Per Car__ - Konfigurasi jumlah garis radial per mobil
 - __Custom Curve Intensity__ - Pengaturan kelengkungan garis per track
+- __Track Visibility Toggle__ - Show/hide track per layer (outer/middle/inner)
+- __Gradient Mode per Track__ - Mode white→dark gradient dengan hidden cars (independent per track)
 
 ---
 
@@ -63,9 +66,13 @@ Project ini menampilkan simulasi lalu lintas dengan __3 lintasan konsentris__ (O
   - Kecepatan maksimal berbeda per track
   - Jumlah cells berbeda per track
   - Arah putaran berbeda (clockwise/counterclockwise)
+  - Random bezier direction (center→car atau car→center)
 - __Bezier Curve Visualization__ - Cubic bezier dengan 100 tessellation segments
+- __Wobble Effect__ - Control points oscillate dengan ±85 pixel amplitude
 - __Physics-Based Body Simulation__ - Multi-segment vehicle body dengan follow logic
 - __Real-time Parameter Tuning__ - Keyboard shortcuts untuk ubah curve intensity
+- __Per-Track Gradient Mode__ - Mesh-based vertex coloring dengan white→dark gradient
+- __Reset Functionality__ - Re-generate semua tracks, mobil, dan bezier dengan random config
 
 ---
 
@@ -74,6 +81,10 @@ Project ini menampilkan simulasi lalu lintas dengan __3 lintasan konsentris__ (O
 | Input | Action |
 | --- | --- |
 | __Key 'S'__ | Mulai simulasi (Start) |
+| __Key 'R'__ | Reset semua (tracks, mobil, bezier - re-generate dengan random config) |
+| __Key 'T'__ | Toggle gradient mode untuk **OUTER** track (white→dark, hide cars) |
+| __Key 'Y'__ | Toggle gradient mode untuk **MIDDLE** track (white→dark, hide cars) |
+| __Key 'U'__ | Toggle gradient mode untuk **INNER** track (white→dark, hide cars) |
 | __Key '1'__ | Switch ke CircleRoad (lingkaran sempurna) |
 | __Key '2'__ | Switch ke CurvedRoad (oval dengan straight sections) |
 | __Key '+' / '='__ | Tingkatkan curve intensity track OUTER |
@@ -82,6 +93,9 @@ Project ini menampilkan simulasi lalu lintas dengan __3 lintasan konsentris__ (O
 | __Key '['__ | Kurangi curve intensity track MIDDLE |
 | __Key '.' / '>'__ | Tingkatkan curve intensity track INNER |
 | __Key ',' / '<'__ | Kurangi curve intensity track INNER |
+| __Key 'Z'__ | Toggle visibility track OUTER |
+| __Key 'X'__ | Toggle visibility track MIDDLE |
+| __Key 'C'__ | Toggle visibility track INNER |
 | __Key 'Q'__ | Keluar dari aplikasi |
 
 ---
@@ -90,6 +104,7 @@ Project ini menampilkan simulasi lalu lintas dengan __3 lintasan konsentris__ (O
 
 - __OpenFrameworks 0.12.1__
   - ofPolyline untuk smooth curves
+  - ofMesh untuk vertex coloring dan gradient effects
   - ofEasyCam untuk camera system
   - OpenGL-based rendering
 - __C++17__
@@ -181,10 +196,38 @@ distance = (distance + v) % maxCells;
 // Cubic bezier formula untuk radial lines
 B(t) = (1-t)³P0 + 3(1-t)²tP1 + 3(1-t)t²P2 + t³P3
 
-// P0 = Center layar
-// P3 = Tepi mobil (dengan gap 5px)
+// P0 = Center layar (atau car edge tergantung random drawFromCenter)
+// P3 = Car edge (atau center tergantung random drawFromCenter)
 // P1 = Control point 1 (dengan curveAngle1 offset)
 // P2 = Control point 2 (dengan curveAngle2 offset)
+```
+
+### Wobble Effect
+
+```
+// Wobble effect untuk organic movement pada control points
+wobble1 = sin(wobbleTime * 3.0f + lineIndex * 0.5f) * 85.0f;
+wobble2 = cos(wobbleTime * 3.0f + lineIndex * 0.5f) * 85.0f;
+
+// P1 dan P2 di-update dengan wobble offset
+P1 = P1 + wobble1;
+P2 = P2 + wobble2;
+```
+
+### Gradient Mode (White→Dark)
+
+```
+// Per-vertex coloring dengan ofMesh
+for (int k = 0; k <= segments; k++) {
+  float t = (float)k / segments;
+
+  // Gradient dari putih (255) ke gelap (0)
+  float val = ofMap(t, 0.0f, 1.0f, 255.0f, 0.0f);
+
+  // Add vertex dengan color
+  mesh.addVertex(position);
+  mesh.addColor(ofColor(val, val, val, 150));
+}
 ```
 
 ### Physics-Based Body Simulation

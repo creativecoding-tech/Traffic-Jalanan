@@ -98,7 +98,7 @@ void SedanCar::updateBody(const std::vector<glm::vec2> &newPoints) {
 /**
  * Draw Simple Circle
  *
- * Gambar mobil sebagai circle sederhana seperti TestModelNaSch.
+ * Gambar mobil sebagai circle sederhana.
  * Size berdasarkan velocity (lambat = besar, cepat = kecil).
  * Warna merah jika macet (v = 0).
  */
