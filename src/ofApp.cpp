@@ -28,6 +28,7 @@ void ofApp::setup() {
     // Spawn mobil dengan maxVOuter, maxCellsOuter, numLinesPerCarOuter, curveIntensityOuter
     t.setup(bounds, numCarsOuter, 50, maxVOuter, probSlowOuter, maxCellsOuter, currentRoadType, numLinesPerCarOuter, curveIntensityOuter,
             curveAngle1Outer, curveAngle2Outer, directionOuter);
+    t.visible = true;  // Default visible
     tracks.push_back(t);
   }
 
@@ -39,6 +40,7 @@ void ofApp::setup() {
     // Spawn mobil dengan maxVMiddle, maxCellsMiddle, numLinesPerCarMiddle, curveIntensityMiddle
     t.setup(bounds, numCarsMiddle, 50, maxVMiddle, probSlowMiddle, maxCellsMiddle, currentRoadType, numLinesPerCarMiddle, curveIntensityMiddle,
             curveAngle1Middle, curveAngle2Middle, directionMiddle);
+    t.visible = true;  // Default visible
     tracks.push_back(t);
   }
 
@@ -50,6 +52,7 @@ void ofApp::setup() {
     // Spawn mobil dengan maxVInner, maxCellsInner, numLinesPerCarInner, curveIntensityInner
     t.setup(bounds, numCarsInner, 45, maxVInner, probSlowInner, maxCellsInner, currentRoadType, numLinesPerCarInner, curveIntensityInner,
             curveAngle1Inner, curveAngle2Inner, directionInner);
+    t.visible = true;  // Default visible
     tracks.push_back(t);
   }
 }
@@ -87,7 +90,10 @@ void ofApp::draw() {
   float wobbleTime = ofGetElapsedTimef() * .5f;  // Kecepatan wobble
 
   for (auto &track : tracks) {
-    track.draw(&ofApp::getBezierPoint, wobbleTime);
+    // Hanya draw jika visible
+    if (track.visible) {
+      track.draw(&ofApp::getBezierPoint, wobbleTime);
+    }
   }
 }
 
@@ -347,6 +353,27 @@ void ofApp::keyPressed(int key) {
   if (key == ',' || key == '<') {
       curveIntensityInner -= .1f;
       if (!tracks.empty()) tracks[2].curveIntensity = curveIntensityInner;
+  }
+
+  // Toggle visibility track outer dengan 'Z' atau 'z'
+  if (key == 'z' || key == 'Z') {
+    if (!tracks.empty()) {
+      tracks[0].visible = !tracks[0].visible;  // Toggle outer track
+    }
+  }
+
+  // Toggle visibility track middle dengan 'X' atau 'x'
+  if (key == 'x' || key == 'X') {
+    if (tracks.size() > 1) {
+      tracks[1].visible = !tracks[1].visible;  // Toggle middle track
+    }
+  }
+
+  // Toggle visibility track inner dengan 'C' atau 'c'
+  if (key == 'c' || key == 'C') {
+    if (tracks.size() > 2) {
+      tracks[2].visible = !tracks[2].visible;  // Toggle inner track
+    }
   }
 
   // Keluar dengan tombol 'q' atau 'Q'

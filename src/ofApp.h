@@ -49,6 +49,7 @@ private:
     float curveAngle1;    // Angle offset untuk P1 (dalam radian)
     float curveAngle2;    // Angle offset untuk P2 (dalam radian)
     int direction;        // Arah putaran: 1 = counter-clockwise, -1 = clockwise
+    bool visible;         // Visibility toggle untuk track ini
 
     // Helper to update this track
     void setup(ofRectangle bounds, int numCars, int spacing, float maxV,
