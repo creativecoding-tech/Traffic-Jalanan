@@ -7,7 +7,7 @@
 
 [![Fund The Experiments](https://img.shields.io/badge/Fund-The_Experiments-FF5722?style=for-the-badge&logo=buy-me-a-coffee)](https://sociabuzz.com/abdkdhni)
 
-Eksperimen simulasi lalu lintas dengan openFrameworks. Nagel-Schreckenberg model, bezier curves visualization, dan multi-track system dalam C++17.
+Eksperimen creative coding dengan openFrameworks. Menggabungkan Nagel-Schreckenberg movement algorithm, bezier curves visualization, dan multi-track system untuk menciptakan pola visual yang dinamis dan estetik dalam C++17.
 
 ---
 
@@ -19,7 +19,7 @@ Lihat hasilnya di YouTube: [Watch Demo](https://youtu.be/nE35ZAXm14c)
 
 ## 📺 Preview
 
-Project ini menampilkan simulasi lalu lintas dengan __3 lintasan konsentris__ (Outer, Middle, Inner) yang dapat dikonfigurasi:
+Project ini adalah eksplorasi **generative art** yang menggunakan Nagel-Schreckenberg movement algorithm untuk menggerakkan objek-objek visual secara organik. Terdapat __3 lintasan konsentris__ (Outer, Middle, Inner) yang dapat dikonfigurasi:
 
 ### Road Types
 
@@ -202,11 +202,11 @@ moveAmount = spacingError * 0.2f;  // Smooth follow
 
 Project ini adalah bagian dari eksplorasi __Creative Coding__ dan pembelajaran:
 
-- 🔬 Eksperimen traffic simulation dengan cellular automata
+- 🔬 Eksperimen generative art dengan cellular automata movement
 - 🎨 Belajar design patterns (Strategy, Template Method) dalam C++
-- ⚡ Implementasi smooth bezier curves visualization
-- 📚 Memahami arsitektur modular untuk simulation systems
-- 🌿 Fondasi untuk project traffic visualization yang lebih kompleks
+- ⚡ Implementasi smooth bezier curves visualization dengan efek visual
+- 📚 Memahami arsitektur modular untuk creative coding systems
+- 🌿 Fondasi untuk project visual art yang lebih kompleks dan interaktif
 
 ---
 
@@ -217,7 +217,7 @@ Dengan optimasi C++ modern dan openFrameworks:
 - __Solid 60 FPS__ pada resolusi 1920x1080
 - __Smooth bezier curves__ dengan 100 tessellation segments
 - __Anti-aliased rendering__ untuk kualitas visual tinggi
-- __Grid-based O(1) collision detection__ untuk efficient traffic simulation
+- __Grid-based O(1) collision detection__ untuk efficient movement system
 
 ---
 
