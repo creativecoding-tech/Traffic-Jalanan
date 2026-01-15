@@ -322,22 +322,24 @@ void ofApp::keyPressed(int key) {
       if (!tracks.empty()) tracks[0].curveIntensity = curveIntensityOuter;
       
   }
-  
+
   if (key == ']' || key == '}') {
-      curveIntensityMiddle += 0.1f;
+      curveIntensityMiddle += .1f;
       if (!tracks.empty()) tracks[1].curveIntensity = curveIntensityMiddle;
   }
+
   if (key == '[' || key == '{') {
-      curveIntensityMiddle -= 0.1f;
+      curveIntensityMiddle -= .1f;
       if (!tracks.empty()) tracks[1].curveIntensity = curveIntensityMiddle;
   }
 
   if (key == '.' || key == '>') {
-      curveIntensityInner += 0.1f;
+      curveIntensityInner += .1f;
       if (!tracks.empty()) tracks[2].curveIntensity = curveIntensityInner;
   }
+
   if (key == ',' || key == '<') {
-      curveIntensityInner -= 0.1f;
+      curveIntensityInner -= .1f;
       if (!tracks.empty()) tracks[2].curveIntensity = curveIntensityInner;
   }
 
