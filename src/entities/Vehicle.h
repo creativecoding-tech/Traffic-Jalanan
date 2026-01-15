@@ -56,7 +56,7 @@ public:
 		return distance;
 	}
 
-	virtual int getVelocity() const {
+	virtual float getVelocity() const {
 		return v;
 	}
 
@@ -68,7 +68,7 @@ public:
 		distance = d;
 	}
 
-	virtual void setVelocity(int vel) {
+	virtual void setVelocity(float vel) {
 		v = vel;
 	}
 
@@ -106,7 +106,7 @@ protected:
  * - 1 = lambat
  * - 5 = maksimal (ngebut)
  */
-	int v;
+	float v;
 
     /**
  * color - Warna mobil (RGB 0.0 - 1.0)

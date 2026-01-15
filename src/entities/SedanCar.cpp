@@ -6,20 +6,18 @@
  *
  * Initialize SedanCar dengan parent constructor dan buat strategy.
  */
-SedanCar::SedanCar(
-    float startDist,
-    int velocity,
-    vec3 color,
-    int maxCells,
-    int maxV,
-    float probSlow
-)
-// Panggil constructor Vehicle (parent) dulu
-    : Vehicle(startDist, velocity, color)
-    , storedMaxCells(maxCells)  // Simpan untuk referensi
-{
-    // Buat NaSchMovement strategy
-    movementStrat = std::make_unique<NaSchMovement>(maxCells, maxV, probSlow);
+SedanCar::SedanCar(float startDist, float velocity, vec3 color, int maxCells,
+                   float maxV, float probSlow)
+    : Vehicle(startDist, velocity, color), storedMaxCells(maxCells),
+      storedMaxV(maxV) {
+  movementStrat = std::make_unique<NaSchMovement>(maxCells, maxV, probSlow);
+
+  // Init segments untuk physics simulation
+  int numSegments = 15;
+  for (int i = 0; i < numSegments; i++) {
+    // Awalnya semua numpuk di startDist, atau berjejer ke belakang
+    segmentDistances.push_back(startDist - (i * 2.0f));
+  }
 }
 
 /**
@@ -33,76 +31,34 @@ SedanCar::SedanCar(
  * 3. Strategy akan menjalankan 4 aturan Nagel-Schreckenberg:
  *    - Accelerate
  *    - Brake (dengan grid lookup)
- *    - Randomize (20% kemungkinan)
+ *    - Randomize (sesuai probSlow parameter)
  *    - Move (dengan wrapping)
  */
 void SedanCar::update() {
-    // Pastikan strategy sudah di-set
-    if (movementStrat) {
-        // Delegate ke strategy
-        movementStrat->update(*this);
-    }
+  // Pastikan strategy sudah di-set
+  if (movementStrat) {
+    // Delegate ke strategy
+    movementStrat->update(*this);
+  }
 }
 
 /**
-  * Override draw() dari Vehicle
-  *
-  * Method ini menggambar SedanCar ke layar.
-  *
-  * Visualisasi:
-  * - Mobil digambar sebagai rectangle (kotak)
-  * - Size berbanding terbalik dengan kecepatan (lambat = besar, cepat = kecil)
-  * - Warna merah kalau macet (v = 0)
-  * - Rotasi sesuai arah road
-  *
-  * @param xPos Posisi X di layar
-  * @param yPos Posisi Y di layar
-  * @param angle Rotasi dalam derajat (0 = horizontal ke kanan)
-  */
+ * Override draw() dari Vehicle
+ *
+ * Method ini menggambar SedanCar ke layar sebagai simple circle.
+ *
+ * Visualisasi:
+ * - Mobil digambar sebagai circle sederhana
+ * - Size berbanding terbalik dengan kecepatan (lambat = besar 20px, cepat = kecil 10px)
+ * - Warna merah kalau macet (v < 0.1), warna mobil kalau jalan
+ *
+ * @param xPos Posisi X di layar
+ * @param yPos Posisi Y di layar
+ * @param angle Rotasi dalam derajat (tidak dipakai untuk circle)
+ */
 void SedanCar::draw(float xPos, float yPos, float angle) {
-    // Ambil data dari vehicle
-    int currentV = getVelocity();
-    vec3 col = getColor();
-
-    // Hitung size berdasarkan kecepatan
-    // v = 0 (macet)  → size besar (20px)
-    // v = 5 (ngebut) → size kecil (8px)
-    float size = ofMap(currentV, 0, 5, 20.0f, 8.0f);
-
-    // Tentukan warna render
-    ofColor renderCol;
-    if (currentV == 0) {
-        // Kalau macet (v = 0), warna merah terang
-        renderCol = ofColor(255, 0, 0);
-    }
-    else {
-        // Kalau bergerak, pakai warna asli (convert vec3 0-1 ke ofColor 0-255)
-        renderCol = ofColor(
-            col.r * 255,  // R
-            col.g * 255,  // G
-            col.b * 255,  // B
-            200           // Alpha (semi-transparent)
-        );
-    }
-
-    // Gambar mobil dengan transformasi (rotasi)
-    ofPushMatrix();
-
-    // Pindah origin ke posisi mobil
-    ofTranslate(xPos, yPos);
-
-    // Rotasi sesuai arah road
-    ofRotateDeg(angle);
-
-    // Set warna
-    ofSetColor(renderCol);
-
-    // Gambar mobil sebagai rectangle
-    // -size/2, -size/4 → supaya center rectangle di (0, 0)
-    // lebar = size, tinggi = size/2 (mobil lebih panjang dari lebar)
-    ofDrawRectangle(-size / 2, -size / 4, size, size / 2);
-
-    ofPopMatrix();
+  // Gambar mobil sebagai circle
+  drawBody();
 }
 
 /**
@@ -119,15 +75,61 @@ void SedanCar::draw(float xPos, float yPos, float angle) {
  * Atau lewat method ini:
  * car.setGrid(grid.data(), grid.size());
  */
-void SedanCar::setGrid(const int* gridPtr, int gridSize) {
-    // Pastikan movementStrat ada dan bertipe NaSchMovement
-    if (movementStrat) {
-        // Cast ke NaSchMovement* untuk akses setGrid()
-        NaSchMovement* naschStrat = dynamic_cast<NaSchMovement*>(movementStrat.get());
+void SedanCar::setGrid(const int *gridPtr, int gridSize) {
+  // Pastikan movementStrat ada dan bertipe NaSchMovement
+  if (movementStrat) {
+    // Cast ke NaSchMovement* untuk akses setGrid()
+    NaSchMovement *naschStrat =
+        dynamic_cast<NaSchMovement *>(movementStrat.get());
 
-        if (naschStrat) {
-            // Panggil setGrid() dari strategy
-            naschStrat->setGrid(gridPtr, gridSize);
-        }
+    if (naschStrat) {
+      // Panggil setGrid() dari strategy
+      naschStrat->setGrid(gridPtr, gridSize);
     }
+  }
+}
+
+void SedanCar::updateBody(const std::vector<glm::vec2> &newPoints) {
+  if (newPoints.empty())
+    return;
+  bodyPoints = newPoints;
+}
+
+/**
+ * Draw Simple Circle
+ *
+ * Gambar mobil sebagai circle sederhana seperti TestModelNaSch.
+ * Size berdasarkan velocity (lambat = besar, cepat = kecil).
+ * Warna merah jika macet (v = 0).
+ */
+void SedanCar::drawBody() {
+  if (bodyPoints.size() < 1)
+    return;
+
+  // Ambil posisi mobil (titik pertama = kepala)
+  vec2 pos = bodyPoints[0];
+
+  // Ambil velocity
+  float v = getVelocity();
+
+  // Size berdasarkan velocity (lambat = besar, cepat = kecil)
+  // maxV disimpan di storedMaxV
+  float size = ofMap(v, 0, storedMaxV, 20, 10);
+
+  // Warna: merah jika macet (v ≈ 0), warna mobil jika jalan
+  vec3 col = getColor();
+  ofColor renderCol;
+
+  if (v < 0.1f) {
+    // Macet - warna merah
+    renderCol = ofColor(0, 0, 0);
+  } else {
+    // Jalan - warna mobil
+    renderCol = ofColor(col.r * 255, col.g * 255, col.b * 255);
+    // Gambar circle dengan alpha 150
+    ofSetColor(renderCol, 150);
+    ofFill();
+    ofDrawCircle(pos.x, pos.y, size);
+  }
+
 }
