@@ -1,4 +1,4 @@
-## Traffic-Jalanan | OpenFrameworks Traffic Simulation
+## Traffic-Jalanan Nagel-Schreckenberg | OpenFrameworks
 
 [![C++](https://img.shields.io/badge/C++-17-blue)](https://isocpp.org/)
 [![OpenFrameworks](https://img.shields.io/badge/OpenFrameworks-0.12.1-blue)](https://openframeworks.cc)
@@ -8,7 +8,7 @@
 
 [![Fund The Experiments](https://img.shields.io/badge/Fund-The_Experiments-FF5722?style=for-the-badge&logo=buy-me-a-coffee)](https://sociabuzz.com/abdkdhni)
 
-Eksperimen simulasi lalu lintas dengan openFrameworks. Traffic simulation dengan Nagel-Schreckenberg model, bezier curves visualization, dan multi-track system dalam C++17.
+Eksperimen simulasi lalu lintas dengan openFrameworks. Nagel-Schreckenberg model, bezier curves visualization, dan multi-track system dalam C++17.
 
 ---
 
