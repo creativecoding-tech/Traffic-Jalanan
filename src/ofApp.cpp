@@ -83,8 +83,11 @@ void ofApp::draw() {
   ofFill();
   ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
 
+  // Hitung wobble time untuk bezier curves
+  float wobbleTime = ofGetElapsedTimef() * .5f;  // Kecepatan wobble
+
   for (auto &track : tracks) {
-    track.draw(&ofApp::getBezierPoint);
+    track.draw(&ofApp::getBezierPoint, wobbleTime);
   }
 }
 
@@ -206,7 +209,7 @@ void ofApp::TrackInstance::update() {
   }
 }
 
-void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint)) {
+void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint), float wobbleTime) {
   // Road tidak ditampilkan (hanya mobil & garis radial)
   // road->draw();
 
@@ -241,7 +244,6 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
     // Loop untuk setiap garis
     for(int lineIdx = 0; lineIdx < numLinesPerCar; lineIdx++) {
       // Offset angle untuk posisi tersebar merata di sekeliling mobil
-      // Bagi lingkaran penuh (TWO_PI) dengan jumlah garis
       float spreadAngle = lineIdx * (TWO_PI / numLinesPerCar);
 
       // P0 = Pusat layar
@@ -251,23 +253,27 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
 
       // Control points: P1 dan P2
       // Untuk S-CURVE (lengkungan ganda), P1 dan P2 melengkung ke arah BERLAWANAN
-      // P1: +90 derajat, P2: -90 derajat dari arah garis
       float curveAmount = radius * curveIntensity;
 
       // Hitung angle untuk garis ini (dari pusat ke P3)
       float lineAngle = atan2(p3.y - p0.y, p3.x - p0.x);
 
-      // P1 di posisi dengan angle offset dari track ini (curveAngle1)
-      ofPoint p1(p0.x + cos(lineAngle + curveAngle1) * curveAmount,
-                 p0.y + sin(lineAngle + curveAngle1) * curveAmount);
+      // APPLY DRAMATIC UNDERWATER WOBBLE!
+      // Wobble besar supaya pasti kelihatan
+      float wobble1 = sin(wobbleTime * 3.0f + lineIdx * 0.5f) * 85.0f;
+      float wobble2 = cos(wobbleTime * 3.0f + lineIdx * 0.5f) * 85.0f;
 
-      // P2 di posisi dengan angle offset dari track ini (curveAngle2)
-      ofPoint p2(p0.x + cos(lineAngle + curveAngle2) * curveAmount,
-                 p0.y + sin(lineAngle + curveAngle2) * curveAmount);
+      // P1 di posisi dengan angle offset + DRAMATIC WOBBLE
+      ofPoint p1(p0.x + cos(lineAngle + curveAngle1) * (curveAmount + wobble1),
+                 p0.y + sin(lineAngle + curveAngle1) * (curveAmount + wobble1));
 
-      // Tessellate bezier curve dengan lebih banyak segment untuk kelihatan mulus
+      // P2 di posisi dengan angle offset + DRAMATIC WOBBLE
+      ofPoint p2(p0.x + cos(lineAngle + curveAngle2) * (curveAmount + wobble2),
+                 p0.y + sin(lineAngle + curveAngle2) * (curveAmount + wobble2));
+
+      // Tessellate bezier curve
       ofPolyline bezierPolyline;
-      int segments = 100;  // Tingkatkan dari 30 ke 100 untuk lebih smooth
+      int segments = 100;
 
       for(int k = 0; k <= segments; k++) {
         float t = (float)k / segments;
@@ -279,7 +285,7 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
       float alpha = ofMap(lineIdx, 0, numLinesPerCar - 1, 80, 150);
       ofSetColor(col.r * 255, col.g * 255, col.b * 255, alpha);
 
-      // Gambar bezier polyline sebagai garis kontinu (lebih mulus)
+      // Gambar bezier polyline sebagai garis kontinu
       ofSetLineWidth(3);
       bezierPolyline.draw();
     }

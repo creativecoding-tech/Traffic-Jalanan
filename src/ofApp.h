@@ -55,7 +55,7 @@ private:
                float probSlow, int maxCells, RoadType roadType, int numLinesPerCar, float curveIntensity,
                float curveAngle1, float curveAngle2, int direction);
     void update();
-    void draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint));
+    void draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint), float wobbleTime);
     void regenerateRoad(RoadType roadType);  // Switch road type
   };
 
