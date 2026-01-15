@@ -390,6 +390,12 @@ void ofApp::keyPressed(int key) {
     }
   }
 
+  // Reset simulasi dengan 'R' atau 'r'
+  if (key == 'r' || key == 'R') {
+    tracks.clear();  // Hapus semua track lama
+    setup();         // Buat ulang semua track, mobil, dan bezier
+  }
+
   // Keluar dengan tombol 'q' atau 'Q'
   if (key == 'q' || key == 'Q')
     ofExit();
