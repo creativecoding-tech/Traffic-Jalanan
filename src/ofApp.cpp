@@ -95,7 +95,7 @@ void ofApp::draw() {
   for (auto &track : tracks) {
     // Hanya draw jika visible
     if (track.visible) {
-      track.draw(&ofApp::getBezierPoint, wobbleTime);
+      track.draw(&ofApp::getBezierPoint, wobbleTime, gradientMode);
     }
   }
 }
@@ -218,7 +218,7 @@ void ofApp::TrackInstance::update() {
   }
 }
 
-void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint), float wobbleTime) {
+void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint), float wobbleTime, bool gradientMode) {
   // Road tidak ditampilkan (hanya mobil & garis radial)
   // road->draw();
 
@@ -235,7 +235,10 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
     vec2 tangent = road->getTangentAtDistance(dist);
     float angle = ofRadToDeg(atan2(tangent.y, tangent.x));
 
-    vehicle->draw(pos.x, pos.y, angle);
+    // Skip drawing vehicle jika gradient mode aktif
+    if (!gradientMode) {
+      vehicle->draw(pos.x, pos.y, angle);
+    }
 
     // Gambar MULTIPLE garis radial bezier
     vec2 carPos(pos.x, pos.y);
@@ -292,22 +295,45 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
                  p0.y + sin(lineAngle + curveAngle2) * (curveAmount + wobble2));
 
       // Tessellate bezier curve
-      ofPolyline bezierPolyline;
       int segments = 100;
 
-      for(int k = 0; k <= segments; k++) {
-        float t = (float)k / segments;
-        ofPoint p = bezierHelper(t, p0, p1, p2, p3);
-        bezierPolyline.addVertex(p.x, p.y);
+      if (gradientMode) {
+        // GRADIENT MODE: Hitam ke Orange dengan vertex colors
+        ofMesh bezierMesh;
+        bezierMesh.setMode(OF_PRIMITIVE_LINE_STRIP);
+
+        for(int k = 0; k <= segments; k++) {
+          float t = (float)k / segments;
+          ofPoint p = bezierHelper(t, p0, p1, p2, p3);
+          bezierMesh.addVertex(glm::vec3(p.x, p.y, 0.0f));
+
+          // Gradient dari hitam (0,0,0) ke orange (255,165,0)
+          float r = ofMap(t, 0.0f, 1.0f, 0.0f, 255.0f);
+          float g = ofMap(t, 0.0f, 1.0f, 0.0f, 165.0f);
+          float b = 0.0f;
+          bezierMesh.addColor(ofColor(r, g, b, 200));  // Alpha 200
+        }
+
+        // Gambar mesh dengan gradient
+        bezierMesh.draw();
+      } else {
+        // NORMAL MODE: Single color dengan alpha variation
+        ofPolyline bezierPolyline;
+
+        for(int k = 0; k <= segments; k++) {
+          float t = (float)k / segments;
+          ofPoint p = bezierHelper(t, p0, p1, p2, p3);
+          bezierPolyline.addVertex(p.x, p.y);
+        }
+
+        // Alpha bervariasi per garis
+        float alpha = ofMap(lineIdx, 0, numLinesPerCar - 1, 80, 150);
+        ofSetColor(col.r * 255, col.g * 255, col.b * 255, alpha);
+
+        // Gambar bezier polyline sebagai garis kontinu
+        ofSetLineWidth(3);
+        bezierPolyline.draw();
       }
-
-      // Alpha bervariasi per garis
-      float alpha = ofMap(lineIdx, 0, numLinesPerCar - 1, 80, 150);
-      ofSetColor(col.r * 255, col.g * 255, col.b * 255, alpha);
-
-      // Gambar bezier polyline sebagai garis kontinu
-      ofSetLineWidth(3);
-      bezierPolyline.draw();
     }
   }
 }
@@ -394,6 +420,11 @@ void ofApp::keyPressed(int key) {
   if (key == 'r' || key == 'R') {
     tracks.clear();  // Hapus semua track lama
     setup();         // Buat ulang semua track, mobil, dan bezier
+  }
+
+  // Toggle gradient mode dengan 'W' atau 'w'
+  if (key == 'w' || key == 'W') {
+    gradientMode = !gradientMode;  // Toggle gradient mode
   }
 
   // Keluar dengan tombol 'q' atau 'Q'

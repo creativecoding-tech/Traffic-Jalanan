@@ -57,7 +57,7 @@ private:
                float probSlow, int maxCells, RoadType roadType, int numLinesPerCar, float curveIntensity,
                float curveAngle1, float curveAngle2, int direction);
     void update();
-    void draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint), float wobbleTime);
+    void draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint), float wobbleTime, bool gradientMode);
     void regenerateRoad(RoadType roadType);  // Switch road type
   };
 
@@ -117,6 +117,7 @@ private:
 
   // Simulation control
   bool simulationStarted = false;  // Simulasi belum mulai sampai tekan 's' atau 'S'
+  bool gradientMode = false;       // Gradient mode: hide cars, bezier gradient black→orange
 
   // Road switching controls
   // '1' = CircleRoad (default, lingkaran sempurna)
