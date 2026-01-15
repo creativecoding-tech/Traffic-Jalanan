@@ -312,7 +312,7 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
 
           // Gradient dari putih (255,255,255) ke gelap (0,0,0)
           float val = ofMap(t, 0.0f, 1.0f, 255.0f, 0.0f);  // Reverse: 255→0
-          bezierMesh.addColor(ofColor(val, val, val, 200));  // Grayscale gradient, Alpha 200
+          bezierMesh.addColor(ofColor(val, val, val, 150));  // Grayscale gradient, Alpha 200
         }
 
         // Gambar mesh dengan gradient
@@ -351,6 +351,7 @@ void ofApp::keyPressed(int key) {
     currentRoadType = CIRCLE;
     // Regenerate semua track dengan CircleRoad
     for (auto &track : tracks) {
+      ofBackground(0);
       track.regenerateRoad(currentRoadType);
     }
   }
@@ -359,6 +360,7 @@ void ofApp::keyPressed(int key) {
     currentRoadType = CURVED;
     // Regenerate semua track dengan CurvedRoad
     for (auto &track : tracks) {
+      ofBackground(0);
       track.regenerateRoad(currentRoadType);
     }
   }
