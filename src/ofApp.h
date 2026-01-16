@@ -5,6 +5,7 @@
 #include "ofMain.h"
 #include "road/CircleRoad.h"
 #include "road/CurvedRoad.h"
+#include "road/PerlinNoiseRoad.h"
 #include "road/Road.h"
 #include <memory>
 #include <vector>
@@ -17,8 +18,9 @@ class ofApp : public ofBaseApp {
 public:
   // Road type enum
   enum RoadType {
-    CIRCLE,   // Lingkaran sempurna (default)
-    CURVED    // Oval dengan straight sections
+    CIRCLE,        // Lingkaran sempurna (default)
+    CURVED,        // Oval dengan straight sections
+    PERLIN_NOISE   // Lingkaran organik dengan Perlin noise
   };
   void setup();
   void update();

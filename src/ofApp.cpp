@@ -139,8 +139,10 @@ void ofApp::TrackInstance::regenerateRoad(RoadType roadType) {
   // Buat road baru berdasarkan tipe
   if (roadType == CIRCLE) {
     road = std::make_shared<CircleRoad>();
-  } else {  // CURVED
+  } else if (roadType == CURVED) {
     road = std::make_shared<CurvedRoad>();
+  } else {  // PERLIN_NOISE
+    road = std::make_shared<PerlinNoiseRoad>();
   }
 
   // Generate path dengan bounds yang tersimpan
@@ -358,6 +360,15 @@ void ofApp::keyPressed(int key) {
   if (key == '2') {
     currentRoadType = CURVED;
     // Regenerate semua track dengan CurvedRoad
+    for (auto &track : tracks) {
+      ofBackground(0);
+      track.regenerateRoad(currentRoadType);
+    }
+  }
+
+  if (key == '3') {
+    currentRoadType = PERLIN_NOISE;
+    // Regenerate semua track dengan PerlinNoiseRoad
     for (auto &track : tracks) {
       ofBackground(0);
       track.regenerateRoad(currentRoadType);
