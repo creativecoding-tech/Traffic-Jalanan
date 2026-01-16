@@ -29,7 +29,7 @@ using glm::vec3;
 class Vehicle
 {
 public:
-	Vehicle(float startDist, int velocity, vec3 col) : distance(startDist)
+	Vehicle(float startDist, float velocity, vec3 col) : distance(startDist)
 		, v(velocity)
 		, color(col)
 		, movementStrat(nullptr)

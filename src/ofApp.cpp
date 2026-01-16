@@ -109,12 +109,20 @@ void ofApp::TrackInstance::setup(ofRectangle bounds, int numCars, int spacing,
                                  float maxV, float probSlow, int maxCells, RoadType roadType, int numLinesPerCar, float curveIntensity,
                                  float curveAngle1, float curveAngle2, int direction) {
   this->bounds = bounds;
+  this->roadType = roadType;          // Simpan roadType untuk cek SpiralRoad
   this->maxCells = maxCells;
+  this->maxV = maxV;                  // Simpan maxV untuk SpiralRoad
   this->numLinesPerCar = numLinesPerCar;  // Simpan numLinesPerCar untuk track ini
   this->curveIntensity = curveIntensity;  // Simpan curveIntensity untuk track ini
   this->curveAngle1 = curveAngle1;        // Simpan curveAngle1 untuk track ini
   this->curveAngle2 = curveAngle2;        // Simpan curveAngle2 untuk track ini
   this->direction = direction;            // Simpan direction untuk track ini
+
+  // Simpan maxV ke maxVPerTrack untuk SpiralRoad (untuk restore nanti)
+  maxVPerTrack.resize(3);  // [outer, middle, inner]
+  maxVPerTrack[0] = maxV;   // Simpan untuk outer track
+  maxVPerTrack[1] = maxV;   // Simpan untuk middle track
+  maxVPerTrack[2] = maxV;   // Simpan untuk inner track
 
   // 1. Road - buat berdasarkan roadType
   regenerateRoad(roadType);
@@ -136,13 +144,34 @@ void ofApp::TrackInstance::setup(ofRectangle bounds, int numCars, int spacing,
 }
 
 void ofApp::TrackInstance::regenerateRoad(RoadType roadType) {
+  // Update roadType
+  this->roadType = roadType;
+
   // Buat road baru berdasarkan tipe
   if (roadType == CIRCLE) {
     road = std::make_shared<CircleRoad>();
   } else if (roadType == CURVED) {
     road = std::make_shared<CurvedRoad>();
-  } else {  // PERLIN_NOISE
+  } else if (roadType == PERLIN_NOISE) {
     road = std::make_shared<PerlinNoiseRoad>();
+  } else {  // SPIRAL
+    road = std::make_shared<SpiralRoad>();
+
+    // ===== TURUNKAN KECEPATAN saat SpiralRoad! =====
+    // Inner: 50% kecepatan, Middle: 50% kecepatan, Outer: 50% kecepatan
+    float speedMultiplier = 0.5f;
+
+    // Update vehicle velocities untuk semua track
+    for (auto &vehicle : traffic) {
+      float originalV = vehicle->getVelocity();
+      float slowV = originalV * speedMultiplier;
+      vehicle->setVelocity(slowV);
+    }
+
+    // Ganti dengan maxV yang sudah disimpan di setup
+    for (auto &vehicle : traffic) {
+      vehicle->setVelocity(this->maxV);
+    }
   }
 
   // Generate path dengan bounds yang tersimpan
@@ -150,6 +179,22 @@ void ofApp::TrackInstance::regenerateRoad(RoadType roadType) {
 }
 
 void ofApp::TrackInstance::update() {
+  // 0. Hapus vehicles yang ditandai untuk dihapus (SpiralRoad black hole)
+  if (!vehiclesToRemove.empty()) {
+    // Sort descending untuk menghapus dari indeks terbesar (aman!)
+    std::sort(vehiclesToRemove.begin(), vehiclesToRemove.end(), std::greater<int>());
+
+    // Hapus dari vector (dari indeks terbesar ke terkecil)
+    for (int idx : vehiclesToRemove) {
+      if (idx < traffic.size()) {
+        traffic.erase(traffic.begin() + idx);
+      }
+    }
+
+    // Clear list untuk frame berikutnya
+    vehiclesToRemove.clear();
+  }
+
   // 1. Reset Grid
   grid.assign(maxCells, -1);
 
@@ -224,8 +269,8 @@ void ofApp::TrackInstance::update() {
 }
 
 void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint), float wobbleTime, bool gradientMode) {
-  // Road tidak ditampilkan (hanya mobil & garis radial)
-  // road->draw();
+  // TEST: Gambar road polyline untuk lihat apa yang terjadi
+  //road->draw();
 
   // Draw Vehicles
   for (auto &vehicle : traffic) {
@@ -240,17 +285,53 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
     vec2 tangent = road->getTangentAtDistance(dist);
     float angle = ofRadToDeg(atan2(tangent.y, tangent.x));
 
+    // ===== SPIRAL ROAD BLACK HOLE EFFECT =====
+    // Check apakah mobil di GAP area (SpiralRoad only)
+    vec2 carPos(pos.x, pos.y);
+
+    // Pakai center dari bounds, bukan screen center (untuk multi-track)
+    vec2 trackCenter(bounds.x + bounds.width / 2.0f, bounds.y + bounds.height / 2.0f);
+    float radius = glm::length(carPos - trackCenter);
+
+    bool inBlackHole = false;  // Flag untuk cek apakah di black hole
+
+    if (roadType == SPIRAL) {
+      // Threshold GAP: Absolute 150 pixels (SEMUA inner track masuk black hole!)
+      float gapThreshold = 150.0f;
+
+      if (radius < gapThreshold) {
+        inBlackHole = true;  // Masuk black hole!
+
+        // Mark vehicle untuk DIHAPUS (cari indeksnya di traffic vector)
+        for (int i = 0; i < traffic.size(); i++) {
+          if (traffic[i] == vehicle) {
+            vehiclesToRemove.push_back(i);  // Tambah ke list untuk dihapus
+            break;  // Sudah ketemu, keluar loop
+          }
+        }
+      }
+    }
+
     // Skip drawing vehicle jika gradient mode aktif
     if (!gradientMode) {
-      vehicle->draw(pos.x, pos.y, angle);
+      if (inBlackHole) {
+        // Gambar mobil dengan WARNA HITAM (merge dengan background)
+        ofSetColor(0, 0, 0);  // Hitam total
+        vehicle->draw(pos.x, pos.y, angle);
+      } else {
+        vehicle->draw(pos.x, pos.y, angle);
+      }
     }
 
     // Gambar MULTIPLE garis radial bezier
-    vec2 carPos(pos.x, pos.y);
-    ofPoint centerPoint(ofGetWidth() / 2, ofGetHeight() / 2);
+    ofPoint centerPoint(trackCenter.x, trackCenter.y);  // Convert vec2 ke ofPoint
     float angleToCar = atan2(carPos.y - centerPoint.y, carPos.x - centerPoint.x);
-    float radius = glm::length(carPos - vec2(centerPoint.x, centerPoint.y));
     vec3 col = vehicle->getColor();
+
+    // Jika di black hole, bezier juga HITAM
+    if (inBlackHole) {
+      col = vec3(0, 0, 0);  // Hitam
+    }
 
     // Hitung radius mobil (berdasarkan velocity)
     float v = vehicle->getVelocity();
@@ -369,6 +450,15 @@ void ofApp::keyPressed(int key) {
   if (key == '3') {
     currentRoadType = PERLIN_NOISE;
     // Regenerate semua track dengan PerlinNoiseRoad
+    for (auto &track : tracks) {
+      ofBackground(0);
+      track.regenerateRoad(currentRoadType);
+    }
+  }
+
+  if (key == '4') {
+    currentRoadType = SPIRAL;
+    // Regenerate semua track dengan SpiralRoad
     for (auto &track : tracks) {
       ofBackground(0);
       track.regenerateRoad(currentRoadType);

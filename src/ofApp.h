@@ -7,6 +7,7 @@
 #include "road/CurvedRoad.h"
 #include "road/PerlinNoiseRoad.h"
 #include "road/Road.h"
+#include "road/SpiralRoad.h"
 #include <memory>
 #include <vector>
 
@@ -20,7 +21,8 @@ public:
   enum RoadType {
     CIRCLE,        // Lingkaran sempurna (default)
     CURVED,        // Oval dengan straight sections
-    PERLIN_NOISE   // Lingkaran organik dengan Perlin noise
+    PERLIN_NOISE,  // Lingkaran organik dengan Perlin noise
+    SPIRAL         // Spiral in-out continuous
   };
   void setup();
   void update();
@@ -42,10 +44,12 @@ private:
   // Struct to hold simulation instance
   struct TrackInstance {
     std::shared_ptr<Road> road;  // Gunakan Road base class (bukan CurvedRoad)
+    RoadType roadType;            // Tipe road untuk cek SpiralRoad behavior
     ofRectangle bounds;          // Simpan bounds untuk regenerate road
     std::vector<std::shared_ptr<Vehicle>> traffic;
     std::vector<int> grid;
     int maxCells;
+    float maxV;  // Kecepatan maksimal untuk track ini
     int numLinesPerCar;  // Jumlah garis per mobil untuk track ini
     float curveIntensity; // Intensitas kelengkungan garis radial
     float curveAngle1;    // Angle offset untuk P1 (dalam radian)
@@ -54,6 +58,12 @@ private:
     bool visible;         // Visibility toggle untuk track ini
     bool drawFromCenter;  // true: center→car, false: car→center
     bool gradientMode;    // true: white→dark gradient, hide cars
+
+    // Untuk SpiralRoad: daftar indeks vehicle yang harus dihapus
+    std::vector<int> vehiclesToRemove;
+
+    // Untuk SpiralRoad: simpan maxV asli per track untuk di-restore
+    std::vector<float> maxVPerTrack;  // [maxVOuter, maxVMiddle, maxVInner]
 
     // Helper to update this track
     void setup(ofRectangle bounds, int numCars, int spacing, float maxV,
