@@ -6,7 +6,7 @@ PerlinNoiseRoad::PerlinNoiseRoad()
     , centerY(0)
     , baseRadius(0)
     , numPoints(360)      // Satu titik per derajat untuk smoothness
-    , noiseScale(1.5f)    // Kontrol frekuensi noise
+    , noiseScale(3.f)    // Kontrol frekuensi noise
     , deformAmount(0.3f)  // 30% deformasi (tengah dari range 20-40%)
 {
 }
@@ -32,8 +32,8 @@ void PerlinNoiseRoad::generatePath(ofRectangle bounds) {
         // Multi-octave Perlin noise untuk detail yang terlihat natural
         // Setiap octave menambah detail pada skala yang berbeda
         float n = 0.0f;
-        n += ofNoise(angle * noiseScale, 0.0f) * 0.5f;        // Fitur besar (weight 50%)
-        n += ofNoise(angle * noiseScale * 2.0f, 1.0f) * 0.3f; // Fitur sedang (weight 30%)
+        //n += ofNoise(angle * noiseScale, 0.0f) * 0.5f;        // Fitur besar (weight 50%)
+        //n += ofNoise(angle * noiseScale * 2.0f, 1.0f) * 0.3f; // Fitur sedang (weight 30%)
         n += ofNoise(angle * noiseScale * 4.0f, 2.0f) * 0.2f; // Detail kecil (weight 20%)
 
         // Map noise dari [0,1] ke [-1,1] untuk deformasi simetris

@@ -22,11 +22,11 @@ public:
     /**
   * Constructor
   *
-  * @param maxCells Jumlah total cells di road (default 300)
+  * @param maxCells Jumlah total cells di road (default 600)
   * @param maxV Kecepatan maksimal (default 5)
   * @param probSlow Probabilitas pengereman mendadak (default 0.2 = 20%)
   */
-    NaSchMovement(int maxCells = 300, float maxV = 5.0f, float probSlow = 0.2f);
+    NaSchMovement(int maxCells = 600, float maxV = 5.0f, float probSlow = 0.2f);
 
 
     /**
