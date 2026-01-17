@@ -134,6 +134,16 @@ void ofApp::TrackInstance::setup(ofRectangle bounds, int numCars, int spacing,
     traffic.push_back(std::make_shared<SedanCar>(startDist, 0.005f, color,
                                                  maxCells, maxV, probSlow));
   }
+
+  // 4. Set velocity berdasarkan roadType (HARUS SETELAH traffic dibuat!)
+  if (roadType == SPIRAL) {
+    // Gunakan kecepatan SpiralRoad
+    for (auto &vehicle : traffic) {
+      vehicle->setMaxVelocity(this->spiralMaxV);
+      vehicle->setVelocity(this->spiralMaxV);
+    }
+  }
+  // Untuk road type lain, velocity sudah diset dari maxV di constructor SedanCar
 }
 
 void ofApp::TrackInstance::regenerateRoad(RoadType roadType) {
