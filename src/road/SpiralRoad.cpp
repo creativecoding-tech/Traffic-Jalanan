@@ -6,7 +6,7 @@ SpiralRoad::SpiralRoad()
     , centerY(0)
     , outerRadius(0)
     , orbitRotations(10)   // 1 putaran orbit sebelum spiral IN (cepat!)
-    , numLoops(4)         // 3 rotasi in, 3 rotasi out (dramatic!)
+    , numLoops(8)         // 3 rotasi in, 3 rotasi out (dramatic!)
     , numPoints(720)      // Total titik untuk smoothness
     , lengthIn(0)
     , lengthOut(0)

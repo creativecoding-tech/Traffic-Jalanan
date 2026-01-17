@@ -35,6 +35,9 @@ public:
 	 */
 	virtual void update(Vehicle& vehicle) = 0;
 
+	// Set max velocity untuk movement strategy
+	virtual void setMaxV(float v) = 0;
+
 protected:
 	// Helper methods untuk 4 aturan Nagel-Schreckenberg
 	// Bisa dipakai atau di-override oleh child class

@@ -24,6 +24,7 @@ public:
     PERLIN_NOISE,  // Lingkaran organik dengan Perlin noise
     SPIRAL         // Spiral in-out continuous
   };
+
   void setup();
   void update();
   void draw();
@@ -43,13 +44,14 @@ public:
 private:
   // Struct to hold simulation instance
   struct TrackInstance {
-    std::shared_ptr<Road> road;  // Gunakan Road base class (bukan CurvedRoad)
+    std::shared_ptr<Road> road;  // Gunakan Road base class
     RoadType roadType;            // Tipe road untuk cek SpiralRoad behavior
     ofRectangle bounds;          // Simpan bounds untuk regenerate road
     std::vector<std::shared_ptr<Vehicle>> traffic;
     std::vector<int> grid;
     int maxCells;
-    float maxV;  // Kecepatan maksimal untuk track ini
+    float maxV;  // Kecepatan maksimal untuk track ini (normal mode)
+    float spiralMaxV;  // Kecepatan maksimal khusus untuk SpiralRoad
     int numLinesPerCar;  // Jumlah garis per mobil untuk track ini
     float curveIntensity; // Intensitas kelengkungan garis radial
     float curveAngle1;    // Angle offset untuk P1 (dalam radian)
@@ -62,13 +64,10 @@ private:
     // Untuk SpiralRoad: daftar indeks vehicle yang harus dihapus
     std::vector<int> vehiclesToRemove;
 
-    // Untuk SpiralRoad: simpan maxV asli per track untuk di-restore
-    std::vector<float> maxVPerTrack;  // [maxVOuter, maxVMiddle, maxVInner]
-
     // Helper to update this track
-    void setup(ofRectangle bounds, int numCars, int spacing, float maxV,
-               float probSlow, int maxCells, RoadType roadType, int numLinesPerCar, float curveIntensity,
-               float curveAngle1, float curveAngle2, int direction);
+    void setup(ofRectangle bounds, int numCars, int spacing, float maxV, float spiralMaxV,
+               float probSlow, int maxCells, RoadType roadType,
+               int numLinesPerCar, float curveIntensity, float curveAngle1, float curveAngle2, int direction);
     void update();
     void draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint), float wobbleTime, bool gradientMode);
     void regenerateRoad(RoadType roadType);  // Switch road type
@@ -94,6 +93,11 @@ private:
   float maxVOuter = 20.0f;    // Track luar - paling cepat
   float maxVMiddle = 6.0f;   // Track tengah - sedang
   float maxVInner = 5.0f;    // Track dalam - paling lambat
+
+  // Kecepatan maksimal khusus untuk SpiralRoad
+  float spiralMaxVOuter = .7f;    
+  float spiralMaxVMiddle = 1.f;   
+  float spiralMaxVInner = 1.5f;    
 
   // Jumlah garis radial per mobil (per track)
   int numLinesPerCarOuter = 5;    // Track luar - lebih banyak garis
@@ -130,8 +134,4 @@ private:
 
   // Simulation control
   bool simulationStarted = false;  // Simulasi belum mulai sampai tekan 's' atau 'S'
-
-  // Road switching controls
-  // '1' = CircleRoad (default, lingkaran sempurna)
-  // '2' = CurvedRoad (oval dengan straight sections)
 };

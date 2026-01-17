@@ -25,9 +25,9 @@ void ofApp::setup() {
     TrackInstance t;
     // Bounds: full screen minus margin
     ofRectangle bounds(50, 50, w - 100, h - 100);
-    // Spawn mobil dengan maxVOuter, maxCellsOuter, numLinesPerCarOuter, curveIntensityOuter
-    t.setup(bounds, numCarsOuter, 50, maxVOuter, probSlowOuter, maxCellsOuter, currentRoadType, numLinesPerCarOuter, curveIntensityOuter,
-            curveAngle1Outer, curveAngle2Outer, directionOuter);
+    // Spawn mobil dengan maxVOuter, spiralMaxVOuter, maxCellsOuter, dll
+    t.setup(bounds, numCarsOuter, 50, maxVOuter, spiralMaxVOuter, probSlowOuter, maxCellsOuter, currentRoadType,
+            numLinesPerCarOuter, curveIntensityOuter, curveAngle1Outer, curveAngle2Outer, directionOuter);
     t.visible = true;  // Default visible
     t.drawFromCenter = (ofRandom(1.0f) < 0.5f);  // Random: center→car atau car→center
     t.gradientMode = false;  // Default: normal mode
@@ -39,9 +39,9 @@ void ofApp::setup() {
   {
     TrackInstance t;
     ofRectangle bounds(200, 200, w - 400, h - 400);
-    // Spawn mobil dengan maxVMiddle, maxCellsMiddle, numLinesPerCarMiddle, curveIntensityMiddle
-    t.setup(bounds, numCarsMiddle, 50, maxVMiddle, probSlowMiddle, maxCellsMiddle, currentRoadType, numLinesPerCarMiddle, curveIntensityMiddle,
-            curveAngle1Middle, curveAngle2Middle, directionMiddle);
+    // Spawn mobil dengan maxVMiddle, spiralMaxVMiddle, maxCellsMiddle, dll
+    t.setup(bounds, numCarsMiddle, 50, maxVMiddle, spiralMaxVMiddle, probSlowMiddle, maxCellsMiddle, currentRoadType,
+            numLinesPerCarMiddle, curveIntensityMiddle, curveAngle1Middle, curveAngle2Middle, directionMiddle);
     t.visible = true;  // Default visible
     t.drawFromCenter = (ofRandom(1.0f) < 0.5f);  // Random: center→car atau car→center
     t.gradientMode = false;  // Default: normal mode
@@ -53,9 +53,9 @@ void ofApp::setup() {
   {
     TrackInstance t;
     ofRectangle bounds(350, 350, w - 700, h - 700);
-    // Spawn mobil dengan maxVInner, maxCellsInner, numLinesPerCarInner, curveIntensityInner
-    t.setup(bounds, numCarsInner, 45, maxVInner, probSlowInner, maxCellsInner, currentRoadType, numLinesPerCarInner, curveIntensityInner,
-            curveAngle1Inner, curveAngle2Inner, directionInner);
+    // Spawn mobil dengan maxVInner, spiralMaxVInner, maxCellsInner, dll
+    t.setup(bounds, numCarsInner, 45, maxVInner, spiralMaxVInner, probSlowInner, maxCellsInner, currentRoadType,
+            numLinesPerCarInner, curveIntensityInner, curveAngle1Inner, curveAngle2Inner, directionInner);
     t.visible = true;  // Default visible
     t.drawFromCenter = (ofRandom(1.0f) < 0.5f);  // Random: center→car atau car→center
     t.gradientMode = false;  // Default: normal mode
@@ -106,23 +106,18 @@ void ofApp::draw() {
 // ==================== TRACK INSTANCE IMPLEMENTATION ====================
 
 void ofApp::TrackInstance::setup(ofRectangle bounds, int numCars, int spacing,
-                                 float maxV, float probSlow, int maxCells, RoadType roadType, int numLinesPerCar, float curveIntensity,
-                                 float curveAngle1, float curveAngle2, int direction) {
+                                 float maxV, float spiralMaxV, float probSlow, int maxCells, RoadType roadType,
+                                 int numLinesPerCar, float curveIntensity, float curveAngle1, float curveAngle2, int direction) {
   this->bounds = bounds;
   this->roadType = roadType;          // Simpan roadType untuk cek SpiralRoad
   this->maxCells = maxCells;
-  this->maxV = maxV;                  // Simpan maxV untuk SpiralRoad
+  this->maxV = maxV;                  // Simpan maxV untuk normal mode
+  this->spiralMaxV = spiralMaxV;      // Simpan maxV khusus SpiralRoad
   this->numLinesPerCar = numLinesPerCar;  // Simpan numLinesPerCar untuk track ini
   this->curveIntensity = curveIntensity;  // Simpan curveIntensity untuk track ini
   this->curveAngle1 = curveAngle1;        // Simpan curveAngle1 untuk track ini
   this->curveAngle2 = curveAngle2;        // Simpan curveAngle2 untuk track ini
   this->direction = direction;            // Simpan direction untuk track ini
-
-  // Simpan maxV ke maxVPerTrack untuk SpiralRoad (untuk restore nanti)
-  maxVPerTrack.resize(3);  // [outer, middle, inner]
-  maxVPerTrack[0] = maxV;   // Simpan untuk outer track
-  maxVPerTrack[1] = maxV;   // Simpan untuk middle track
-  maxVPerTrack[2] = maxV;   // Simpan untuk inner track
 
   // 1. Road - buat berdasarkan roadType
   regenerateRoad(roadType);
@@ -134,8 +129,6 @@ void ofApp::TrackInstance::setup(ofRectangle bounds, int numCars, int spacing,
   for (int i = 0; i < numCars; i++) {
     float startDist = i * spacing;
 
-    // Warna random unik tiap track? Atau random total?
-    // Random total aja biar estetik warna warni
     vec3 color = vec3(ofRandom(1.0f), ofRandom(1.0f), ofRandom(1.0f));
 
     traffic.push_back(std::make_shared<SedanCar>(startDist, 0.005f, color,
@@ -150,27 +143,31 @@ void ofApp::TrackInstance::regenerateRoad(RoadType roadType) {
   // Buat road baru berdasarkan tipe
   if (roadType == CIRCLE) {
     road = std::make_shared<CircleRoad>();
+    // Restore kecepatan normal
+    for (auto &vehicle : traffic) {
+      vehicle->setMaxVelocity(this->maxV);
+    }
   } else if (roadType == CURVED) {
     road = std::make_shared<CurvedRoad>();
+    // Restore kecepatan normal
+    for (auto &vehicle : traffic) {
+      vehicle->setMaxVelocity(this->maxV);
+    }
   } else if (roadType == PERLIN_NOISE) {
     road = std::make_shared<PerlinNoiseRoad>();
+    // Restore kecepatan normal
+    for (auto &vehicle : traffic) {
+      vehicle->setMaxVelocity(this->maxV);
+    }
   } else {  // SPIRAL
     road = std::make_shared<SpiralRoad>();
 
-    // ===== TURUNKAN KECEPATAN saat SpiralRoad! =====
-    // Inner: 50% kecepatan, Middle: 50% kecepatan, Outer: 50% kecepatan
-    float speedMultiplier = 0.5f;
-
-    // Update vehicle velocities untuk semua track
+    // ===== GUNAKAN KECEPATAN KHUSUS SPIRALROAD =====
+    // Setiap track punya maxV sendiri untuk SpiralRoad
+    // PENTING: Juga set velocity saat ini, bukan cuma maxV!
     for (auto &vehicle : traffic) {
-      float originalV = vehicle->getVelocity();
-      float slowV = originalV * speedMultiplier;
-      vehicle->setVelocity(slowV);
-    }
-
-    // Ganti dengan maxV yang sudah disimpan di setup
-    for (auto &vehicle : traffic) {
-      vehicle->setVelocity(this->maxV);
+      vehicle->setMaxVelocity(this->spiralMaxV);
+      vehicle->setVelocity(this->spiralMaxV);  // Reset velocity saat ini juga!
     }
   }
 

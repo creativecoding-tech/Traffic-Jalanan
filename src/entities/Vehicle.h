@@ -87,6 +87,14 @@ public:
 	}
 
 	virtual void setGrid(const int* gridPtr, int gridSize){}
+
+	// Set max velocity di movement strategy
+	virtual void setMaxVelocity(float maxV) {
+		if (movementStrat) {
+			movementStrat->setMaxV(maxV);
+		}
+	}
+
 protected:
  /**
  * distance - Posisi mobil di jalan (dalam satuan pixels/units)
