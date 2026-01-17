@@ -5,20 +5,17 @@ SpiralRoad::SpiralRoad()
     : centerX(0)
     , centerY(0)
     , outerRadius(0)
-    , orbitRotations(10)   // 1 putaran orbit sebelum spiral IN (cepat!)
-    , numLoops(8)         // 3 rotasi in, 3 rotasi out (dramatic!)
+    , orbitRotations(9)   // putaran orbit sebelum spiral IN (cepat!)
+    , numLoops(8)         // rotasi in
     , numPoints(720)      // Total titik untuk smoothness
-    , lengthIn(0)
-    , lengthOut(0)
-    , gapThreshold(0.15f) // 15% dari outerRadius = GAP (kecil tapi visible)
+    , length(0)
+    , gapThreshold(0.05f)
 {
 }
 
 //--------------------------------------------------------------
 void SpiralRoad::generatePath(ofRectangle bounds) {
     // Bersihkan semua path yang sudah ada
-    polylineIn.clear();
-    polylineOut.clear();
     polyline.clear();
     path.clear();
 
@@ -29,10 +26,10 @@ void SpiralRoad::generatePath(ofRectangle bounds) {
     // Hitung outer radius dari bounds
     outerRadius = std::min(bounds.width, bounds.height) / 2.0f;
 
-    // Radius threshold untuk GAP (5% dari outer radius)
+    // Radius threshold untuk GAP (15% dari outer radius)
     float gapRadius = outerRadius * gapThreshold;
 
-    // ===== POLYLINE IN: Orbit IN + Spiral IN =====
+    // ===== POLYLINE: Orbit IN + Spiral IN =====
 
     // Phase 1: Orbit IN (circular di outer edge)
     int orbitPoints = orbitRotations * 60;
@@ -43,7 +40,8 @@ void SpiralRoad::generatePath(ofRectangle bounds) {
         float x = centerX + cos(angle) * outerRadius;
         float y = centerY + sin(angle) * outerRadius;
 
-        polylineIn.addVertex(x, y);
+        polyline.addVertex(x, y);
+        path.push_back(vec2(x, y));
     }
 
     // Phase 2: Spiral IN (outer → gapRadius)
@@ -54,44 +52,22 @@ void SpiralRoad::generatePath(ofRectangle bounds) {
         // Radius: outer → gapRadius (berhenti sebelum center!)
         float r = outerRadius - (outerRadius - gapRadius) * progress;
 
-        // Angle: berput saat masuk ke dalam
+        // Angle: berputar saat masuk ke dalam
         float startAngle = TWO_PI * orbitRotations;
         float angle = startAngle + (progress * TWO_PI * numLoops);
 
         float x = centerX + cos(angle) * r;
         float y = centerY + sin(angle) * r;
 
-        polylineIn.addVertex(x, y);
+        polyline.addVertex(x, y);
+        path.push_back(vec2(x, y));
     }
 
-    // ===== POLYLINE OUT: KOSONG =====
-    // TIDAK ADA Spiral OUT! TIDAK ADA Orbit OUT! TIDAK ADA Ghost Phase!
-    // Track berakhir di akhir Spiral IN (gapRadius)
-    // Track KOSONG karena mobil akan di-destroy saat masuk black hole
+    // Track berakhir di sini (mobil di-destroy di black hole)
 
-    // Tambah SATU titik di gapRadius supaya polyline valid (minimal)
-    float ghostRadius = gapRadius * 0.5f;
-    vec2 lastPoint(centerX + cos(TWO_PI * (orbitRotations + numLoops)) * ghostRadius,
-                     centerY + sin(TWO_PI * (orbitRotations + numLoops)) * ghostRadius);
-    polylineOut.addVertex(ofPoint(lastPoint.x, lastPoint.y));
-
-    // Hitung panjang masing-masing polyline
-    lengthIn = polylineIn.getPerimeter();
-    lengthOut = polylineOut.getPerimeter();
-
-    // Total length = sum untuk wrapping logic
-    totalLength = lengthIn + lengthOut;
-
-    // Also add vertices to base polyline for compatibility
-    // (meskipun kita akan pakai polylineIn/polylineOut untuk draw dan getPoint)
-    for (auto& pt : polylineIn.getVertices()) {
-        polyline.addVertex(pt);
-        path.push_back(vec2(pt.x, pt.y));
-    }
-    for (auto& pt : polylineOut.getVertices()) {
-        polyline.addVertex(pt);
-        path.push_back(vec2(pt.x, pt.y));
-    }
+    // Hitung panjang track
+    length = polyline.getPerimeter();
+    totalLength = length;
 }
 
 //--------------------------------------------------------------
@@ -102,17 +78,9 @@ vec2 SpiralRoad::getPointAtDistance(float dist) {
         dist += totalLength;
     }
 
-    // Switch antar polyline berdasarkan distance
-    if (dist < lengthIn) {
-        // Masih di polyline IN (orbit + spiral IN)
-        ofPoint pt = polylineIn.getPointAtLength(dist);
-        return vec2(pt.x, pt.y);
-    } else {
-        // Di polyline OUT (spiral OUT + orbit)
-        float distInOut = dist - lengthIn;  // Offset untuk polyline OUT
-        ofPoint pt = polylineOut.getPointAtLength(distInOut);
-        return vec2(pt.x, pt.y);
-    }
+    // Ambil titik dari polyline (orbit + spiral IN saja)
+    ofPoint pt = polyline.getPointAtLength(dist);
+    return vec2(pt.x, pt.y);
 }
 
 //--------------------------------------------------------------
@@ -133,15 +101,9 @@ void SpiralRoad::draw(float offsetX, float offsetY) {
     ofPushMatrix();
     ofTranslate(offsetX, offsetY);
 
-    // Draw polyline IN (Orbit + Spiral IN)
-    // Color: Gradient dari biru ke merah (menunjukkan approach ke black hole)
-    ofSetColor(0, 0, 0);  // Light blue untuk orbit IN
-    polylineIn.draw();
-
-    // Draw polyline OUT (Spiral OUT + Orbit)
-    // Color: Gradient dari merah ke biru (menunjukkan exit dari black hole)
-    ofSetColor(255, 150, 100);  // Orange untuk spiral OUT
-    polylineOut.draw();
+    // Draw polyline (Orbit + Spiral IN)
+    ofSetColor(0, 0, 0);  // Hitam untuk track
+    polyline.draw();
 
     ofPopMatrix();
 }

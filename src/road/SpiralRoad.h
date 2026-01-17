@@ -29,12 +29,10 @@ private:
     int numLoops;         // Jumlah rotasi spiral (default: 4)
     int numPoints;        // Jumlah titik untuk smoothness (default: 720)
 
-    // Two polyline system untuk GAP effect
-    ofPolyline polylineIn;   // Orbit IN + Spiral IN (outer → center)
-    ofPolyline polylineOut;  // Spiral OUT + Orbit OUT (center → outer)
-    float lengthIn;          // Panjang polyline IN
-    float lengthOut;         // Panjang polyline OUT
-    float gapThreshold;      // Radius threshold untuk GAP (default: 5% dari outerRadius)
+    // Polyline untuk track spiral IN saja (mobil di-destroy di black hole)
+    ofPolyline polyline;   // Orbit IN + Spiral IN (outer → center)
+    float length;          // Panjang track
+    float gapThreshold;    // Radius threshold untuk GAP (default: 5% dari outerRadius)
 
 public:
     // Constructor dengan default parameters

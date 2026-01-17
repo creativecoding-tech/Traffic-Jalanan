@@ -294,7 +294,7 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
 
     if (roadType == SPIRAL) {
       // Threshold GAP: Absolute 150 pixels (SEMUA inner track masuk black hole!)
-      float gapThreshold = 150.0f;
+      float gapThreshold = 100.0f;
 
       if (radius < gapThreshold) {
         inBlackHole = true;  // Masuk black hole!
