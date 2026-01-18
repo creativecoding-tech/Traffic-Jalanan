@@ -95,10 +95,16 @@ void ofApp::draw() {
   // Hitung wobble time untuk bezier curves
   float wobbleTime = ofGetElapsedTimef() * .5f;  // Kecepatan wobble
 
-  for (auto &track : tracks) {
-    // Hanya draw jika visible
-    if (track.visible) {
-      track.draw(&ofApp::getBezierPoint, wobbleTime, track.gradientMode);
+  if (tabMode) {
+    // TAB MODE: Draw inter-track bezier melalui 3 tracks (outer→middle→inner)
+    drawInterTrackBezier(wobbleTime);
+  } else {
+    // NORMAL MODE: Draw setiap track secara independen
+    for (auto &track : tracks) {
+      // Hanya draw jika visible
+      if (track.visible) {
+        track.draw(&ofApp::getBezierPoint, wobbleTime, track.gradientMode);
+      }
     }
   }
 }
@@ -553,6 +559,11 @@ void ofApp::keyPressed(int key) {
     }
   }
 
+  // Toggle TAB mode dengan tombol TAB (ASCII 9 atau '\t')
+  if (key == 9 || key == '\t') {
+    tabMode = !tabMode;  // Toggle inter-track bezier mode
+  }
+
   // Keluar dengan tombol 'q' atau 'Q'
   if (key == 'q' || key == 'Q')
     ofExit();
@@ -602,4 +613,199 @@ ofPoint ofApp::getBezierPoint(float t, ofPoint p0, ofPoint p1, ofPoint p2, ofPoi
 	p.y = uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y;
 
 	return p;
+}
+
+//--------------------------------------------------------------
+// TAB MODE: Helper methods untuk inter-track bezier
+//--------------------------------------------------------------
+
+//--------------------------------------------------------------
+ofPoint ofApp::getCarPosition(TrackInstance& track, int carIndex) {
+  if (carIndex >= track.traffic.size()) {
+    return ofPoint(0, 0);
+  }
+
+  auto& vehicle = track.traffic[carIndex];
+  float dist = vehicle->getDistance() * (track.road->getTotalLength() / track.maxCells);
+
+  // Handle direction reversal
+  if (track.direction == -1) {
+    dist = track.road->getTotalLength() - dist;
+  }
+
+  vec2 pos = track.road->getPointAtDistance(dist);
+  return ofPoint(pos.x, pos.y);
+}
+
+//--------------------------------------------------------------
+bool ofApp::isInBlackHole(TrackInstance& track, int carIndex) {
+  if (carIndex >= track.traffic.size()) return false;
+
+  // Only check for SPIRAL road type
+  if (track.roadType != SPIRAL) return false;
+
+  auto& vehicle = track.traffic[carIndex];
+  float dist = vehicle->getDistance() * (track.road->getTotalLength() / track.maxCells);
+
+  if (track.direction == -1) {
+    dist = track.road->getTotalLength() - dist;
+  }
+
+  vec2 pos = track.road->getPointAtDistance(dist);
+  vec2 trackCenter(track.bounds.x + track.bounds.width / 2.0f,
+                   track.bounds.y + track.bounds.height / 2.0f);
+  float radius = glm::length(pos - trackCenter);
+
+  // Black hole threshold (same as existing draw method)
+  return (radius < 100.0f);
+}
+
+//--------------------------------------------------------------
+void ofApp::drawCarForTabMode(TrackInstance& track, int carIndex) {
+  if (carIndex >= track.traffic.size()) return;
+
+  auto& vehicle = track.traffic[carIndex];
+  float dist = vehicle->getDistance() * (track.road->getTotalLength() / track.maxCells);
+
+  // Handle direction reversal
+  if (track.direction == -1) {
+    dist = track.road->getTotalLength() - dist;
+  }
+
+  vec2 pos = track.road->getPointAtDistance(dist);
+  vec2 tangent = track.road->getTangentAtDistance(dist);
+  float angle = ofRadToDeg(atan2(tangent.y, tangent.x));
+
+  // Check black hole
+  vec2 carPos(pos.x, pos.y);
+  vec2 trackCenter(track.bounds.x + track.bounds.width / 2.0f,
+                   track.bounds.y + track.bounds.height / 2.0f);
+  float radius = glm::length(carPos - trackCenter);
+  bool inBlackHole = false;
+
+  if (track.roadType == SPIRAL && radius < 100.0f) {
+    inBlackHole = true;
+  }
+
+  // Skip drawing vehicle if gradient mode is active
+  if (track.gradientMode) {
+    return;
+  }
+
+  // Draw car
+  if (inBlackHole) {
+    ofSetColor(0, 0, 0);  // Black color for black hole
+    vehicle->draw(pos.x, pos.y, angle);
+  } else {
+    vehicle->draw(pos.x, pos.y, angle);
+  }
+}
+
+//--------------------------------------------------------------
+ofPoint ofApp::calculateControlPoint(ofPoint start, ofPoint end, ofPoint center,
+                                     int direction, float wobbleTime, int carIndex) {
+  float angleToTarget = atan2(end.y - start.y, end.x - start.x);
+  float radius = glm::length(vec2(end.x, end.y) - vec2(center.x, center.y));
+
+  // Use track 0's curve parameters
+  float curveIntensity = tracks[0].curveIntensity;
+  float curveAngle = (direction == 1) ? tracks[0].curveAngle1 : tracks[0].curveAngle2;
+
+  float curveAmount = radius * curveIntensity;
+  float wobble = sin(wobbleTime * 3.0f + carIndex * 0.5f) * 85.0f;
+
+  ofPoint cp;
+  cp.x = start.x + cos(angleToTarget + curveAngle) * (curveAmount + wobble);
+  cp.y = start.y + sin(angleToTarget + curveAngle) * (curveAmount + wobble);
+
+  return cp;
+}
+
+//--------------------------------------------------------------
+void ofApp::drawBezierSegment(ofPoint p0, ofPoint p1, ofPoint p2, ofPoint p3,
+                               vec3 col, int segments) {
+  ofPolyline bezierPolyline;
+
+  for (int k = 0; k <= segments; k++) {
+    float t = (float)k / segments;
+    ofPoint p = getBezierPoint(t, p0, p1, p2, p3);
+    bezierPolyline.addVertex(p.x, p.y);
+  }
+
+  ofSetColor(col.r * 255, col.g * 255, col.b * 255, 150);
+  ofSetLineWidth(3);
+  bezierPolyline.draw();
+}
+
+//--------------------------------------------------------------
+void ofApp::drawContinuousBezier(ofPoint p0, ofPoint p1, ofPoint p2, ofPoint center,
+                                  vec3 col, float wobbleTime, int carIndex) {
+  // Calculate control points for smooth S-curve
+  // Segment 1: Outer (p0) → Middle (p1)
+  ofPoint cp1_1 = calculateControlPoint(p0, p1, center, 1, wobbleTime, carIndex);
+  ofPoint cp1_2 = calculateControlPoint(p1, p0, center, -1, wobbleTime, carIndex);
+
+  // Segment 2: Middle (p1) → Inner (p2)
+  ofPoint cp2_1 = calculateControlPoint(p1, p2, center, 1, wobbleTime, carIndex);
+  ofPoint cp2_2 = calculateControlPoint(p2, p1, center, -1, wobbleTime, carIndex);
+
+  // Draw segment 1: outer → middle
+  drawBezierSegment(p0, cp1_1, cp1_2, p1, col, 100);
+
+  // Draw segment 2: middle → inner
+  drawBezierSegment(p1, cp2_1, cp2_2, p2, col, 100);
+}
+
+//--------------------------------------------------------------
+void ofApp::drawInterTrackBezier(float wobbleTime) {
+  // REQUIREMENT: Need 3 tracks (outer, middle, inner)
+  if (tracks.size() < 3) return;
+
+  TrackInstance& outerTrack = tracks[0];
+  TrackInstance& middleTrack = tracks[1];
+  TrackInstance& innerTrack = tracks[2];
+
+  // Skip if any track is not visible
+  if (!outerTrack.visible || !middleTrack.visible || !innerTrack.visible) {
+    return;
+  }
+
+  // Get common center point (screen center)
+  float w = ofGetWidth();
+  float h = ofGetHeight();
+  ofPoint centerPoint(w / 2, h / 2);
+
+  // Determine max cars to process (handle different track sizes)
+  int maxCars = std::min({
+    (int)outerTrack.traffic.size(),
+    (int)middleTrack.traffic.size(),
+    (int)innerTrack.traffic.size()
+  });
+
+  // Loop through cars by index
+  for (int i = 0; i < maxCars; i++) {
+    // Get car positions from all 3 tracks
+    ofPoint outerPos = getCarPosition(outerTrack, i);
+    ofPoint middlePos = getCarPosition(middleTrack, i);
+    ofPoint innerPos = getCarPosition(innerTrack, i);
+
+    // Skip if any car is in black hole
+    if (isInBlackHole(outerTrack, i) ||
+        isInBlackHole(middleTrack, i) ||
+        isInBlackHole(innerTrack, i)) {
+      continue;
+    }
+
+    // Use car color (e.g., outer car's color)
+    vec3 col = outerTrack.traffic[i]->getColor();
+
+    // Draw continuous bezier: outer → middle → inner
+    drawContinuousBezier(outerPos, middlePos, innerPos, centerPoint, col, wobbleTime, i);
+
+    // ===== DRAW CARS FOR TAB MODE =====
+    // Draw cars from all 3 tracks (unless gradient mode is ON)
+    drawCarForTabMode(outerTrack, i);
+    drawCarForTabMode(middleTrack, i);
+    drawCarForTabMode(innerTrack, i);
+  }
 }

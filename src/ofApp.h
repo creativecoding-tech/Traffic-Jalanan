@@ -132,6 +132,19 @@ private:
   // Bezier curve helper
   static ofPoint getBezierPoint(float t, ofPoint p0, ofPoint p1, ofPoint p2, ofPoint p3);
 
+  // TAB mode helpers
+  void drawInterTrackBezier(float wobbleTime);
+  void drawCarForTabMode(TrackInstance& track, int carIndex);
+  ofPoint getCarPosition(TrackInstance& track, int carIndex);
+  bool isInBlackHole(TrackInstance& track, int carIndex);
+  void drawContinuousBezier(ofPoint p0, ofPoint p1, ofPoint p2, ofPoint center,
+                            vec3 col, float wobbleTime, int carIndex);
+  ofPoint calculateControlPoint(ofPoint start, ofPoint end, ofPoint center,
+                                 int direction, float wobbleTime, int carIndex);
+  void drawBezierSegment(ofPoint p0, ofPoint p1, ofPoint p2, ofPoint p3,
+                         vec3 col, int segments);
+
   // Simulation control
   bool simulationStarted = false;  // Simulasi belum mulai sampai tekan 's' atau 'S'
+  bool tabMode = false;  // TAB mode: draw inter-track bezier instead of center→car
 };
