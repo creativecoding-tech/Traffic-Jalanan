@@ -770,48 +770,78 @@ void ofApp::drawInterTrackBezier(float wobbleTime) {
   TrackInstance& middleTrack = tracks[1];
   TrackInstance& innerTrack = tracks[2];
 
-  // Skip if any track is not visible
-  if (!outerTrack.visible || !middleTrack.visible || !innerTrack.visible) {
-    return;
-  }
-
   // Get common center point (screen center)
   float w = ofGetWidth();
   float h = ofGetHeight();
   ofPoint centerPoint(w / 2, h / 2);
 
-  // Determine max cars to process (handle different track sizes)
-  int maxCars = std::min({
-    (int)outerTrack.traffic.size(),
-    (int)middleTrack.traffic.size(),
-    (int)innerTrack.traffic.size()
-  });
+  // CASE 1: All tracks visible - draw outer → middle → inner
+  if (outerTrack.visible && middleTrack.visible && innerTrack.visible) {
+    // Determine max cars to process
+    int maxCars = std::min({
+      (int)outerTrack.traffic.size(),
+      (int)middleTrack.traffic.size(),
+      (int)innerTrack.traffic.size()
+    });
 
-  // Loop through cars by index
-  for (int i = 0; i < maxCars; i++) {
-    // Get car positions from all 3 tracks
-    ofPoint outerPos = getCarPosition(outerTrack, i);
-    ofPoint middlePos = getCarPosition(middleTrack, i);
-    ofPoint innerPos = getCarPosition(innerTrack, i);
+    // Loop through cars by index
+    for (int i = 0; i < maxCars; i++) {
+      ofPoint outerPos = getCarPosition(outerTrack, i);
+      ofPoint middlePos = getCarPosition(middleTrack, i);
+      ofPoint innerPos = getCarPosition(innerTrack, i);
 
-    // Skip if any car is in black hole
-    if (isInBlackHole(outerTrack, i) ||
-        isInBlackHole(middleTrack, i) ||
-        isInBlackHole(innerTrack, i)) {
-      continue;
+      // Skip if any car is in black hole
+      if (isInBlackHole(outerTrack, i) ||
+          isInBlackHole(middleTrack, i) ||
+          isInBlackHole(innerTrack, i)) {
+        continue;
+      }
+
+      vec3 col = outerTrack.traffic[i]->getColor();
+
+      // Draw continuous bezier: outer → middle → inner
+      drawContinuousBezier(outerPos, middlePos, innerPos, centerPoint, col, wobbleTime, i,
+                          outerTrack, middleTrack, innerTrack);
+
+      // Draw all cars
+      drawCarForTabMode(outerTrack, i);
+      drawCarForTabMode(middleTrack, i);
+      drawCarForTabMode(innerTrack, i);
     }
+  }
+  // CASE 2: Outer hidden - draw only middle → inner
+  else if (!outerTrack.visible && middleTrack.visible && innerTrack.visible) {
+    int maxCars = std::min({
+      (int)middleTrack.traffic.size(),
+      (int)innerTrack.traffic.size()
+    });
 
-    // Use car color (e.g., outer car's color)
-    vec3 col = outerTrack.traffic[i]->getColor();
+    for (int i = 0; i < maxCars; i++) {
+      ofPoint middlePos = getCarPosition(middleTrack, i);
+      ofPoint innerPos = getCarPosition(innerTrack, i);
 
-    // Draw continuous bezier: outer → middle → inner
-    drawContinuousBezier(outerPos, middlePos, innerPos, centerPoint, col, wobbleTime, i,
-                        outerTrack, middleTrack, innerTrack);
+      if (isInBlackHole(middleTrack, i) || isInBlackHole(innerTrack, i)) {
+        continue;
+      }
 
-    // ===== DRAW CARS FOR TAB MODE =====
-    // Draw cars from all 3 tracks (unless gradient mode is ON)
-    drawCarForTabMode(outerTrack, i);
-    drawCarForTabMode(middleTrack, i);
-    drawCarForTabMode(innerTrack, i);
+      vec3 col = middleTrack.traffic[i]->getColor();
+
+      // Draw single segment: middle → inner
+      ofPoint cp1 = calculateControlPoint(middlePos, innerPos, centerPoint, 1, wobbleTime, i,
+                                         middleTrack.curveIntensity, middleTrack.curveAngle1);
+      ofPoint cp2 = calculateControlPoint(innerPos, middlePos, centerPoint, -1, wobbleTime, i,
+                                         innerTrack.curveIntensity, innerTrack.curveAngle2);
+
+      drawBezierSegment(middlePos, cp1, cp2, innerPos, col, 100);
+
+      // Draw only middle and inner cars (outer is hidden)
+      drawCarForTabMode(middleTrack, i);
+      drawCarForTabMode(innerTrack, i);
+    }
+  }
+  // CASE 3 & 4: Other combinations (not implemented yet)
+  else {
+    // For now, don't draw anything if other tracks are hidden
+    // TODO: Handle X and C key presses later
   }
 }
