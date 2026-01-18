@@ -461,21 +461,19 @@ void ofApp::keyPressed(int key) {
   }
 
   if (key == '3') {
-    currentRoadType = PERLIN_NOISE;
-    // Regenerate semua track dengan PerlinNoiseRoad
-    for (auto &track : tracks) {
-      ofBackground(0);
-      track.regenerateRoad(currentRoadType);
-    }
+      currentRoadType = PERLIN_NOISE;
+      for (auto& track : tracks) {
+          track.regenerateRoad(currentRoadType);
+      }
+
   }
 
   if (key == '4') {
-    currentRoadType = SPIRAL;
-    // Regenerate semua track dengan SpiralRoad
-    for (auto &track : tracks) {
-      ofBackground(0);
-      track.regenerateRoad(currentRoadType);
-    }
+      currentRoadType = SPIRAL;
+      for (auto& track : tracks) {
+          track.regenerateRoad(currentRoadType);
+      }
+
   }
 
   // Kontrol curveIntensity untuk track luar (outer)
