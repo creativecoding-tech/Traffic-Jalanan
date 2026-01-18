@@ -703,14 +703,12 @@ void ofApp::drawCarForTabMode(TrackInstance& track, int carIndex) {
 
 //--------------------------------------------------------------
 ofPoint ofApp::calculateControlPoint(ofPoint start, ofPoint end, ofPoint center,
-                                     int direction, float wobbleTime, int carIndex) {
+                                     int direction, float wobbleTime, int carIndex,
+                                     float curveIntensity, float curveAngle) {
   float angleToTarget = atan2(end.y - start.y, end.x - start.x);
   float radius = glm::length(vec2(end.x, end.y) - vec2(center.x, center.y));
 
-  // Use track 0's curve parameters
-  float curveIntensity = tracks[0].curveIntensity;
-  float curveAngle = (direction == 1) ? tracks[0].curveAngle1 : tracks[0].curveAngle2;
-
+  // Use provided curve parameters (instead of always track 0)
   float curveAmount = radius * curveIntensity;
   float wobble = sin(wobbleTime * 3.0f + carIndex * 0.5f) * 85.0f;
 
@@ -739,15 +737,22 @@ void ofApp::drawBezierSegment(ofPoint p0, ofPoint p1, ofPoint p2, ofPoint p3,
 
 //--------------------------------------------------------------
 void ofApp::drawContinuousBezier(ofPoint p0, ofPoint p1, ofPoint p2, ofPoint center,
-                                  vec3 col, float wobbleTime, int carIndex) {
+                                  vec3 col, float wobbleTime, int carIndex,
+                                  TrackInstance& outerTrack, TrackInstance& middleTrack, TrackInstance& innerTrack) {
   // Calculate control points for smooth S-curve
   // Segment 1: Outer (p0) → Middle (p1)
-  ofPoint cp1_1 = calculateControlPoint(p0, p1, center, 1, wobbleTime, carIndex);
-  ofPoint cp1_2 = calculateControlPoint(p1, p0, center, -1, wobbleTime, carIndex);
+  // Control point 1 uses OUTER track, Control point 2 uses MIDDLE track
+  ofPoint cp1_1 = calculateControlPoint(p0, p1, center, 1, wobbleTime, carIndex,
+                                        outerTrack.curveIntensity, outerTrack.curveAngle1);
+  ofPoint cp1_2 = calculateControlPoint(p1, p0, center, -1, wobbleTime, carIndex,
+                                        middleTrack.curveIntensity, middleTrack.curveAngle2);
 
   // Segment 2: Middle (p1) → Inner (p2)
-  ofPoint cp2_1 = calculateControlPoint(p1, p2, center, 1, wobbleTime, carIndex);
-  ofPoint cp2_2 = calculateControlPoint(p2, p1, center, -1, wobbleTime, carIndex);
+  // Control point 1 uses MIDDLE track, Control point 2 uses INNER track
+  ofPoint cp2_1 = calculateControlPoint(p1, p2, center, 1, wobbleTime, carIndex,
+                                        middleTrack.curveIntensity, middleTrack.curveAngle1);
+  ofPoint cp2_2 = calculateControlPoint(p2, p1, center, -1, wobbleTime, carIndex,
+                                        innerTrack.curveIntensity, innerTrack.curveAngle2);
 
   // Draw segment 1: outer → middle
   drawBezierSegment(p0, cp1_1, cp1_2, p1, col, 100);
@@ -800,7 +805,8 @@ void ofApp::drawInterTrackBezier(float wobbleTime) {
     vec3 col = outerTrack.traffic[i]->getColor();
 
     // Draw continuous bezier: outer → middle → inner
-    drawContinuousBezier(outerPos, middlePos, innerPos, centerPoint, col, wobbleTime, i);
+    drawContinuousBezier(outerPos, middlePos, innerPos, centerPoint, col, wobbleTime, i,
+                        outerTrack, middleTrack, innerTrack);
 
     // ===== DRAW CARS FOR TAB MODE =====
     // Draw cars from all 3 tracks (unless gradient mode is ON)

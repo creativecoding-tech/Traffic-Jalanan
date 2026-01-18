@@ -138,9 +138,11 @@ private:
   ofPoint getCarPosition(TrackInstance& track, int carIndex);
   bool isInBlackHole(TrackInstance& track, int carIndex);
   void drawContinuousBezier(ofPoint p0, ofPoint p1, ofPoint p2, ofPoint center,
-                            vec3 col, float wobbleTime, int carIndex);
+                            vec3 col, float wobbleTime, int carIndex,
+                            TrackInstance& outerTrack, TrackInstance& middleTrack, TrackInstance& innerTrack);
   ofPoint calculateControlPoint(ofPoint start, ofPoint end, ofPoint center,
-                                 int direction, float wobbleTime, int carIndex);
+                                 int direction, float wobbleTime, int carIndex,
+                                 float curveIntensity, float curveAngle);
   void drawBezierSegment(ofPoint p0, ofPoint p1, ofPoint p2, ofPoint p3,
                          vec3 col, int segments);
 
