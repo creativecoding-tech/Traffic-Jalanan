@@ -748,11 +748,11 @@ void ofApp::drawContinuousBezier(ofPoint p0, ofPoint p1, ofPoint p2, ofPoint cen
                                         middleTrack.curveIntensity, middleTrack.curveAngle2);
 
   // Segment 2: Middle (p1) → Inner (p2)
-  // Control point 1 uses MIDDLE track, Control point 2 uses INNER track
+  // TAB MODE: Both control points use MIDDLE track (inner curve intensity only affects inner loop!)
   ofPoint cp2_1 = calculateControlPoint(p1, p2, center, 1, wobbleTime, carIndex,
                                         middleTrack.curveIntensity, middleTrack.curveAngle1);
   ofPoint cp2_2 = calculateControlPoint(p2, p1, center, -1, wobbleTime, carIndex,
-                                        innerTrack.curveIntensity, innerTrack.curveAngle2);
+                                        middleTrack.curveIntensity, middleTrack.curveAngle2);
 
   // Draw segment 1: outer → middle
   drawBezierSegment(p0, cp1_1, cp1_2, p1, col, 100);
@@ -808,6 +808,9 @@ void ofApp::drawInterTrackBezier(float wobbleTime) {
       drawCarForTabMode(middleTrack, i);
       drawCarForTabMode(innerTrack, i);
     }
+
+    // Draw inner track loop (sesama mobil inner)
+    drawInnerTrackLoop(innerTrack, centerPoint, wobbleTime);
   }
   // CASE 2: Outer hidden - draw only middle → inner
   else if (!outerTrack.visible && middleTrack.visible && innerTrack.visible) {
@@ -827,10 +830,11 @@ void ofApp::drawInterTrackBezier(float wobbleTime) {
       vec3 col = middleTrack.traffic[i]->getColor();
 
       // Draw single segment: middle → inner
+      // TAB MODE: Both control points use MIDDLE track (inner curve intensity only affects inner loop!)
       ofPoint cp1 = calculateControlPoint(middlePos, innerPos, centerPoint, 1, wobbleTime, i,
                                          middleTrack.curveIntensity, middleTrack.curveAngle1);
       ofPoint cp2 = calculateControlPoint(innerPos, middlePos, centerPoint, -1, wobbleTime, i,
-                                         innerTrack.curveIntensity, innerTrack.curveAngle2);
+                                         middleTrack.curveIntensity, middleTrack.curveAngle2);
 
       drawBezierSegment(middlePos, cp1, cp2, innerPos, col, 100);
 
@@ -838,10 +842,47 @@ void ofApp::drawInterTrackBezier(float wobbleTime) {
       drawCarForTabMode(middleTrack, i);
       drawCarForTabMode(innerTrack, i);
     }
+
+    // Draw inner track loop (sesama mobil inner)
+    drawInnerTrackLoop(innerTrack, centerPoint, wobbleTime);
   }
   // CASE 3 & 4: Other combinations (not implemented yet)
   else {
     // For now, don't draw anything if other tracks are hidden
     // TODO: Handle X and C key presses later
+  }
+}
+
+//--------------------------------------------------------------
+void ofApp::drawInnerTrackLoop(TrackInstance& innerTrack, ofPoint centerPoint, float wobbleTime) {
+  if (!innerTrack.visible) return;
+
+  int numCars = (int)innerTrack.traffic.size();
+  if (numCars < 2) return;  // Need at least 2 cars to make a loop
+
+  // Loop through each car and draw bezier to the next car (with wraparound)
+  for (int i = 0; i < numCars; i++) {
+    int nextIndex = (i + 1) % numCars;  // Wrap around to 0 for last car
+
+    // Skip if either car is in black hole
+    if (isInBlackHole(innerTrack, i) || isInBlackHole(innerTrack, nextIndex)) {
+      continue;
+    }
+
+    // Get positions of current and next car
+    ofPoint currentPos = getCarPosition(innerTrack, i);
+    ofPoint nextPos = getCarPosition(innerTrack, nextIndex);
+
+    // Use current car's color
+    vec3 col = innerTrack.traffic[i]->getColor();
+
+    // Calculate control points for smooth curve
+    ofPoint cp1 = calculateControlPoint(currentPos, nextPos, centerPoint, 1, wobbleTime, i,
+                                        innerTrack.curveIntensity, innerTrack.curveAngle1);
+    ofPoint cp2 = calculateControlPoint(nextPos, currentPos, centerPoint, -1, wobbleTime, i,
+                                        innerTrack.curveIntensity, innerTrack.curveAngle2);
+
+    // Draw bezier segment: current car → next car
+    drawBezierSegment(currentPos, cp1, cp2, nextPos, col, 100);
   }
 }

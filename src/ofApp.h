@@ -135,6 +135,7 @@ private:
   // TAB mode helpers
   void drawInterTrackBezier(float wobbleTime);
   void drawCarForTabMode(TrackInstance& track, int carIndex);
+  void drawInnerTrackLoop(TrackInstance& innerTrack, ofPoint centerPoint, float wobbleTime);
   ofPoint getCarPosition(TrackInstance& track, int carIndex);
   bool isInBlackHole(TrackInstance& track, int carIndex);
   void drawContinuousBezier(ofPoint p0, ofPoint p1, ofPoint p2, ofPoint center,
