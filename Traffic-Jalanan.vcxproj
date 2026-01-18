@@ -241,7 +241,9 @@
     <ClCompile Include="..\..\..\AInstaled\openFrameworks\of_v0.12.1_vs_64_release\addons\ofxGui\src\ofxToggle.cpp" />
     <ClCompile Include="src\road\CurvedRoad.cpp" />
     <ClCompile Include="src\road\CircleRoad.cpp" />
+    <ClCompile Include="src\road\PerlinNoiseRoad.cpp" />
     <ClCompile Include="src\road\Road.cpp" />
+    <ClCompile Include="src\road\SpiralRoad.cpp" />
     <ClCompile Include="src\strategies\MovementStrategy.cpp" />
     <ClCompile Include="src\strategies\NaSchMovement.cpp" />
   </ItemGroup>
@@ -263,7 +265,9 @@
     <ClInclude Include="..\..\..\AInstaled\openFrameworks\of_v0.12.1_vs_64_release\addons\ofxGui\src\ofxToggle.h" />
     <ClInclude Include="src\road\CurvedRoad.h" />
     <ClInclude Include="src\road\CircleRoad.h" />
+    <ClInclude Include="src\road\PerlinNoiseRoad.h" />
     <ClInclude Include="src\road\Road.h" />
+    <ClInclude Include="src\road\SpiralRoad.h" />
     <ClInclude Include="src\strategies\MovementStrategy.h" />
     <ClInclude Include="src\strategies\NaSchMovement.h" />
   </ItemGroup>

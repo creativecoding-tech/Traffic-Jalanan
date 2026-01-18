@@ -25,9 +25,12 @@ void ofApp::setup() {
     TrackInstance t;
     // Bounds: full screen minus margin
     ofRectangle bounds(50, 50, w - 100, h - 100);
-    // Spawn mobil dengan maxVOuter, maxCellsOuter, numLinesPerCarOuter, curveIntensityOuter
-    t.setup(bounds, numCarsOuter, 50, maxVOuter, probSlowOuter, maxCellsOuter, currentRoadType, numLinesPerCarOuter, curveIntensityOuter,
-            curveAngle1Outer, curveAngle2Outer, directionOuter);
+    // Spawn mobil dengan maxVOuter, spiralMaxVOuter, maxCellsOuter, dll
+    t.setup(bounds, numCarsOuter, 50, maxVOuter, spiralMaxVOuter, probSlowOuter, maxCellsOuter, currentRoadType,
+            numLinesPerCarOuter, curveIntensityOuter, curveAngle1Outer, curveAngle2Outer, directionOuter);
+    t.visible = true;  // Default visible
+    t.drawFromCenter = (ofRandom(1.0f) < 0.5f);  // Random: center→car atau car→center
+    t.gradientMode = false;  // Default: normal mode
     tracks.push_back(t);
   }
 
@@ -36,9 +39,12 @@ void ofApp::setup() {
   {
     TrackInstance t;
     ofRectangle bounds(200, 200, w - 400, h - 400);
-    // Spawn mobil dengan maxVMiddle, maxCellsMiddle, numLinesPerCarMiddle, curveIntensityMiddle
-    t.setup(bounds, numCarsMiddle, 50, maxVMiddle, probSlowMiddle, maxCellsMiddle, currentRoadType, numLinesPerCarMiddle, curveIntensityMiddle,
-            curveAngle1Middle, curveAngle2Middle, directionMiddle);
+    // Spawn mobil dengan maxVMiddle, spiralMaxVMiddle, maxCellsMiddle, dll
+    t.setup(bounds, numCarsMiddle, 50, maxVMiddle, spiralMaxVMiddle, probSlowMiddle, maxCellsMiddle, currentRoadType,
+            numLinesPerCarMiddle, curveIntensityMiddle, curveAngle1Middle, curveAngle2Middle, directionMiddle);
+    t.visible = true;  // Default visible
+    t.drawFromCenter = (ofRandom(1.0f) < 0.5f);  // Random: center→car atau car→center
+    t.gradientMode = false;  // Default: normal mode
     tracks.push_back(t);
   }
 
@@ -47,9 +53,12 @@ void ofApp::setup() {
   {
     TrackInstance t;
     ofRectangle bounds(350, 350, w - 700, h - 700);
-    // Spawn mobil dengan maxVInner, maxCellsInner, numLinesPerCarInner, curveIntensityInner
-    t.setup(bounds, numCarsInner, 45, maxVInner, probSlowInner, maxCellsInner, currentRoadType, numLinesPerCarInner, curveIntensityInner,
-            curveAngle1Inner, curveAngle2Inner, directionInner);
+    // Spawn mobil dengan maxVInner, spiralMaxVInner, maxCellsInner, dll
+    t.setup(bounds, numCarsInner, 45, maxVInner, spiralMaxVInner, probSlowInner, maxCellsInner, currentRoadType,
+            numLinesPerCarInner, curveIntensityInner, curveAngle1Inner, curveAngle2Inner, directionInner);
+    t.visible = true;  // Default visible
+    t.drawFromCenter = (ofRandom(1.0f) < 0.5f);  // Random: center→car atau car→center
+    t.gradientMode = false;  // Default: normal mode
     tracks.push_back(t);
   }
 }
@@ -83,18 +92,33 @@ void ofApp::draw() {
   ofFill();
   ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
 
-  for (auto &track : tracks) {
-    track.draw(&ofApp::getBezierPoint);
+  // Hitung wobble time untuk bezier curves
+  float wobbleTime = ofGetElapsedTimef() * .5f;  // Kecepatan wobble
+
+  if (tabMode) {
+    // TAB MODE: Draw inter-track bezier melalui 3 tracks (outer→middle→inner)
+    drawInterTrackBezier(wobbleTime);
+  } else {
+    // NORMAL MODE: Draw setiap track secara independen
+    for (auto &track : tracks) {
+      // Hanya draw jika visible
+      if (track.visible) {
+        track.draw(&ofApp::getBezierPoint, wobbleTime, track.gradientMode);
+      }
+    }
   }
 }
 
 // ==================== TRACK INSTANCE IMPLEMENTATION ====================
 
 void ofApp::TrackInstance::setup(ofRectangle bounds, int numCars, int spacing,
-                                 float maxV, float probSlow, int maxCells, RoadType roadType, int numLinesPerCar, float curveIntensity,
-                                 float curveAngle1, float curveAngle2, int direction) {
+                                 float maxV, float spiralMaxV, float probSlow, int maxCells, RoadType roadType,
+                                 int numLinesPerCar, float curveIntensity, float curveAngle1, float curveAngle2, int direction) {
   this->bounds = bounds;
+  this->roadType = roadType;          // Simpan roadType untuk cek SpiralRoad
   this->maxCells = maxCells;
+  this->maxV = maxV;                  // Simpan maxV untuk normal mode
+  this->spiralMaxV = spiralMaxV;      // Simpan maxV khusus SpiralRoad
   this->numLinesPerCar = numLinesPerCar;  // Simpan numLinesPerCar untuk track ini
   this->curveIntensity = curveIntensity;  // Simpan curveIntensity untuk track ini
   this->curveAngle1 = curveAngle1;        // Simpan curveAngle1 untuk track ini
@@ -111,21 +135,56 @@ void ofApp::TrackInstance::setup(ofRectangle bounds, int numCars, int spacing,
   for (int i = 0; i < numCars; i++) {
     float startDist = i * spacing;
 
-    // Warna random unik tiap track? Atau random total?
-    // Random total aja biar estetik warna warni
     vec3 color = vec3(ofRandom(1.0f), ofRandom(1.0f), ofRandom(1.0f));
 
     traffic.push_back(std::make_shared<SedanCar>(startDist, 0.005f, color,
                                                  maxCells, maxV, probSlow));
   }
+
+  // 4. Set velocity berdasarkan roadType (HARUS SETELAH traffic dibuat!)
+  if (roadType == SPIRAL) {
+    // Gunakan kecepatan SpiralRoad
+    for (auto &vehicle : traffic) {
+      vehicle->setMaxVelocity(this->spiralMaxV);
+      vehicle->setVelocity(this->spiralMaxV);
+    }
+  }
+  // Untuk road type lain, velocity sudah diset dari maxV di constructor SedanCar
 }
 
 void ofApp::TrackInstance::regenerateRoad(RoadType roadType) {
+  // Update roadType
+  this->roadType = roadType;
+
   // Buat road baru berdasarkan tipe
   if (roadType == CIRCLE) {
     road = std::make_shared<CircleRoad>();
-  } else {  // CURVED
+    // Restore kecepatan normal
+    for (auto &vehicle : traffic) {
+      vehicle->setMaxVelocity(this->maxV);
+    }
+  } else if (roadType == CURVED) {
     road = std::make_shared<CurvedRoad>();
+    // Restore kecepatan normal
+    for (auto &vehicle : traffic) {
+      vehicle->setMaxVelocity(this->maxV);
+    }
+  } else if (roadType == PERLIN_NOISE) {
+    road = std::make_shared<PerlinNoiseRoad>();
+    // Restore kecepatan normal
+    for (auto &vehicle : traffic) {
+      vehicle->setMaxVelocity(this->maxV);
+    }
+  } else {  // SPIRAL
+    road = std::make_shared<SpiralRoad>();
+
+    // ===== GUNAKAN KECEPATAN KHUSUS SPIRALROAD =====
+    // Setiap track punya maxV sendiri untuk SpiralRoad
+    // PENTING: Juga set velocity saat ini, bukan cuma maxV!
+    for (auto &vehicle : traffic) {
+      vehicle->setMaxVelocity(this->spiralMaxV);
+      vehicle->setVelocity(this->spiralMaxV);  // Reset velocity saat ini juga!
+    }
   }
 
   // Generate path dengan bounds yang tersimpan
@@ -133,6 +192,22 @@ void ofApp::TrackInstance::regenerateRoad(RoadType roadType) {
 }
 
 void ofApp::TrackInstance::update() {
+  // 0. Hapus vehicles yang ditandai untuk dihapus (SpiralRoad black hole)
+  if (!vehiclesToRemove.empty()) {
+    // Sort descending untuk menghapus dari indeks terbesar (aman!)
+    std::sort(vehiclesToRemove.begin(), vehiclesToRemove.end(), std::greater<int>());
+
+    // Hapus dari vector (dari indeks terbesar ke terkecil)
+    for (int idx : vehiclesToRemove) {
+      if (idx < traffic.size()) {
+        traffic.erase(traffic.begin() + idx);
+      }
+    }
+
+    // Clear list untuk frame berikutnya
+    vehiclesToRemove.clear();
+  }
+
   // 1. Reset Grid
   grid.assign(maxCells, -1);
 
@@ -206,9 +281,9 @@ void ofApp::TrackInstance::update() {
   }
 }
 
-void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint)) {
-  // Road tidak ditampilkan (hanya mobil & garis radial)
-  // road->draw();
+void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint), float wobbleTime, bool gradientMode) {
+  // TEST: Gambar road polyline untuk lihat apa yang terjadi
+  //road->draw();
 
   // Draw Vehicles
   for (auto &vehicle : traffic) {
@@ -223,14 +298,53 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
     vec2 tangent = road->getTangentAtDistance(dist);
     float angle = ofRadToDeg(atan2(tangent.y, tangent.x));
 
-    vehicle->draw(pos.x, pos.y, angle);
-
-    // Gambar MULTIPLE garis radial bezier dari center screen ke mobil
+    // ===== SPIRAL ROAD BLACK HOLE EFFECT =====
+    // Check apakah mobil di GAP area (SpiralRoad only)
     vec2 carPos(pos.x, pos.y);
-    ofPoint p0(ofGetWidth() / 2, ofGetHeight() / 2);
-    float angleToCar = atan2(carPos.y - p0.y, carPos.x - p0.x);
-    float radius = glm::length(carPos - vec2(p0.x, p0.y));
+
+    // Pakai center dari bounds, bukan screen center (untuk multi-track)
+    vec2 trackCenter(bounds.x + bounds.width / 2.0f, bounds.y + bounds.height / 2.0f);
+    float radius = glm::length(carPos - trackCenter);
+
+    bool inBlackHole = false;  // Flag untuk cek apakah di black hole
+
+    if (roadType == SPIRAL) {
+      // Threshold GAP: Absolute 150 pixels (SEMUA inner track masuk black hole!)
+      float gapThreshold = 100.0f;
+
+      if (radius < gapThreshold) {
+        inBlackHole = true;  // Masuk black hole!
+
+        // Mark vehicle untuk DIHAPUS (cari indeksnya di traffic vector)
+        for (int i = 0; i < traffic.size(); i++) {
+          if (traffic[i] == vehicle) {
+            vehiclesToRemove.push_back(i);  // Tambah ke list untuk dihapus
+            break;  // Sudah ketemu, keluar loop
+          }
+        }
+      }
+    }
+
+    // Skip drawing vehicle jika gradient mode aktif
+    if (!gradientMode) {
+      if (inBlackHole) {
+        // Gambar mobil dengan WARNA HITAM (merge dengan background)
+        ofSetColor(0, 0, 0);  // Hitam total
+        vehicle->draw(pos.x, pos.y, angle);
+      } else {
+        vehicle->draw(pos.x, pos.y, angle);
+      }
+    }
+
+    // Gambar MULTIPLE garis radial bezier
+    ofPoint centerPoint(trackCenter.x, trackCenter.y);  // Convert vec2 ke ofPoint
+    float angleToCar = atan2(carPos.y - centerPoint.y, carPos.x - centerPoint.x);
     vec3 col = vehicle->getColor();
+
+    // Jika di black hole, bezier juga HITAM
+    if (inBlackHole) {
+      col = vec3(0, 0, 0);  // Hitam
+    }
 
     // Hitung radius mobil (berdasarkan velocity)
     float v = vehicle->getVelocity();
@@ -241,47 +355,81 @@ void ofApp::TrackInstance::draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, 
     // Loop untuk setiap garis
     for(int lineIdx = 0; lineIdx < numLinesPerCar; lineIdx++) {
       // Offset angle untuk posisi tersebar merata di sekeliling mobil
-      // Bagi lingkaran penuh (TWO_PI) dengan jumlah garis
       float spreadAngle = lineIdx * (TWO_PI / numLinesPerCar);
 
-      // P0 = Pusat layar
-      // P3 = Titik TEPAT di pinggir luar mobil
-      ofPoint p3(carPos.x + cos(spreadAngle) * (carRadius + gap),
-                 carPos.y + sin(spreadAngle) * (carRadius + gap));
+      // Titik di pinggir luar mobil
+      ofPoint carEdgePoint(carPos.x + cos(spreadAngle) * (carRadius + gap),
+                           carPos.y + sin(spreadAngle) * (carRadius + gap));
+
+      // Tentukan P0 dan P3 berdasarkan drawFromCenter
+      ofPoint p0, p3;
+      if (drawFromCenter) {
+        // Dari center ke car
+        p0 = centerPoint;
+        p3 = carEdgePoint;
+      } else {
+        // Dari car ke center
+        p0 = carEdgePoint;
+        p3 = centerPoint;
+      }
 
       // Control points: P1 dan P2
       // Untuk S-CURVE (lengkungan ganda), P1 dan P2 melengkung ke arah BERLAWANAN
-      // P1: +90 derajat, P2: -90 derajat dari arah garis
       float curveAmount = radius * curveIntensity;
 
       // Hitung angle untuk garis ini (dari pusat ke P3)
       float lineAngle = atan2(p3.y - p0.y, p3.x - p0.x);
 
-      // P1 di posisi dengan angle offset dari track ini (curveAngle1)
-      ofPoint p1(p0.x + cos(lineAngle + curveAngle1) * curveAmount,
-                 p0.y + sin(lineAngle + curveAngle1) * curveAmount);
+      // Wobble besar supaya pasti kelihatan
+      float wobble1 = sin(wobbleTime * 3.0f + lineIdx * 0.5f) * 85.0f;
+      float wobble2 = cos(wobbleTime * 3.0f + lineIdx * 0.5f) * 85.0f;
 
-      // P2 di posisi dengan angle offset dari track ini (curveAngle2)
-      ofPoint p2(p0.x + cos(lineAngle + curveAngle2) * curveAmount,
-                 p0.y + sin(lineAngle + curveAngle2) * curveAmount);
+      // P1 di posisi dengan angle offset + DRAMATIC WOBBLE
+      ofPoint p1(p0.x + cos(lineAngle + curveAngle1) * (curveAmount + wobble1),
+                 p0.y + sin(lineAngle + curveAngle1) * (curveAmount + wobble1));
 
-      // Tessellate bezier curve dengan lebih banyak segment untuk kelihatan mulus
-      ofPolyline bezierPolyline;
-      int segments = 100;  // Tingkatkan dari 30 ke 100 untuk lebih smooth
+      // P2 di posisi dengan angle offset + DRAMATIC WOBBLE
+      ofPoint p2(p0.x + cos(lineAngle + curveAngle2) * (curveAmount + wobble2),
+                 p0.y + sin(lineAngle + curveAngle2) * (curveAmount + wobble2));
 
-      for(int k = 0; k <= segments; k++) {
-        float t = (float)k / segments;
-        ofPoint p = bezierHelper(t, p0, p1, p2, p3);
-        bezierPolyline.addVertex(p.x, p.y);
+      // Tessellate bezier curve
+      int segments = 100;
+
+      if (gradientMode) {
+        // GRADIENT MODE: Hitam ke Orange dengan vertex colors
+        ofMesh bezierMesh;
+        bezierMesh.setMode(OF_PRIMITIVE_LINE_STRIP);
+
+        for(int k = 0; k <= segments; k++) {
+          float t = (float)k / segments;
+          ofPoint p = bezierHelper(t, p0, p1, p2, p3);
+          bezierMesh.addVertex(glm::vec3(p.x, p.y, 0.0f));
+
+          // Gradient dari putih (255,255,255) ke gelap (0,0,0)
+          float val = ofMap(t, 0.0f, 1.0f, 255.0f, 0.0f);  // Reverse: 255→0
+          bezierMesh.addColor(ofColor(val, val, val, 150));  // Grayscale gradient, Alpha 200
+        }
+
+        // Gambar mesh dengan gradient
+        bezierMesh.draw();
+      } else {
+        // NORMAL MODE: Single color dengan alpha variation
+        ofPolyline bezierPolyline;
+
+        for(int k = 0; k <= segments; k++) {
+          float t = (float)k / segments;
+          ofPoint p = bezierHelper(t, p0, p1, p2, p3);
+          bezierPolyline.addVertex(p.x, p.y);
+        }
+
+        // Alpha bervariasi per garis
+        float alpha = ofMap(lineIdx, 0, numLinesPerCar - 1, 80, 150);
+        ofSetColor(col.r * 255, col.g * 255, col.b * 255, alpha);
+
+        // Gambar bezier polyline sebagai garis kontinu
+        ofSetLineWidth(3);
+        bezierPolyline.draw();
       }
-
-      // Alpha bervariasi per garis
-      float alpha = ofMap(lineIdx, 0, numLinesPerCar - 1, 80, 150);
-      ofSetColor(col.r * 255, col.g * 255, col.b * 255, alpha);
-
-      // Gambar bezier polyline sebagai garis kontinu (lebih mulus)
-      ofSetLineWidth(5);
-      bezierPolyline.draw();
     }
   }
 }
@@ -298,6 +446,7 @@ void ofApp::keyPressed(int key) {
     currentRoadType = CIRCLE;
     // Regenerate semua track dengan CircleRoad
     for (auto &track : tracks) {
+      ofBackground(0);
       track.regenerateRoad(currentRoadType);
     }
   }
@@ -306,8 +455,25 @@ void ofApp::keyPressed(int key) {
     currentRoadType = CURVED;
     // Regenerate semua track dengan CurvedRoad
     for (auto &track : tracks) {
+      ofBackground(0);
       track.regenerateRoad(currentRoadType);
     }
+  }
+
+  if (key == '3') {
+      currentRoadType = PERLIN_NOISE;
+      for (auto& track : tracks) {
+          track.regenerateRoad(currentRoadType);
+      }
+
+  }
+
+  if (key == '4') {
+      currentRoadType = SPIRAL;
+      for (auto& track : tracks) {
+          track.regenerateRoad(currentRoadType);
+      }
+
   }
 
   // Kontrol curveIntensity untuk track luar (outer)
@@ -341,6 +507,59 @@ void ofApp::keyPressed(int key) {
   if (key == ',' || key == '<') {
       curveIntensityInner -= .1f;
       if (!tracks.empty()) tracks[2].curveIntensity = curveIntensityInner;
+  }
+
+  // Toggle visibility track outer dengan 'Z' atau 'z'
+  if (key == 'z' || key == 'Z') {
+    if (!tracks.empty()) {
+      tracks[0].visible = !tracks[0].visible;  // Toggle outer track
+    }
+  }
+
+  // Toggle visibility track middle dengan 'X' atau 'x'
+  if (key == 'x' || key == 'X') {
+    if (tracks.size() > 1) {
+      tracks[1].visible = !tracks[1].visible;  // Toggle middle track
+    }
+  }
+
+  // Toggle visibility track inner dengan 'C' atau 'c'
+  if (key == 'c' || key == 'C') {
+    if (tracks.size() > 2) {
+      tracks[2].visible = !tracks[2].visible;  // Toggle inner track
+    }
+  }
+
+  // Reset simulasi dengan 'R' atau 'r'
+  if (key == 'r' || key == 'R') {
+    tracks.clear();  // Hapus semua track lama
+    setup();         // Buat ulang semua track, mobil, dan bezier
+  }
+
+  // Toggle gradient mode untuk OUTER track dengan 'T' atau 't'
+  if (key == 't' || key == 'T') {
+    if (!tracks.empty()) {
+      tracks[0].gradientMode = !tracks[0].gradientMode;
+    }
+  }
+
+  // Toggle gradient mode untuk MIDDLE track dengan 'Y' atau 'y'
+  if (key == 'y' || key == 'Y') {
+    if (tracks.size() > 1) {
+      tracks[1].gradientMode = !tracks[1].gradientMode;
+    }
+  }
+
+  // Toggle gradient mode untuk INNER track dengan 'U' atau 'u'
+  if (key == 'u' || key == 'U') {
+    if (tracks.size() > 2) {
+      tracks[2].gradientMode = !tracks[2].gradientMode;
+    }
+  }
+
+  // Toggle TAB mode dengan tombol TAB (ASCII 9 atau '\t')
+  if (key == 9 || key == '\t') {
+    tabMode = !tabMode;  // Toggle inter-track bezier mode
   }
 
   // Keluar dengan tombol 'q' atau 'Q'
@@ -392,4 +611,276 @@ ofPoint ofApp::getBezierPoint(float t, ofPoint p0, ofPoint p1, ofPoint p2, ofPoi
 	p.y = uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y;
 
 	return p;
+}
+
+//--------------------------------------------------------------
+// TAB MODE: Helper methods untuk inter-track bezier
+//--------------------------------------------------------------
+
+//--------------------------------------------------------------
+ofPoint ofApp::getCarPosition(TrackInstance& track, int carIndex) {
+  if (carIndex >= track.traffic.size()) {
+    return ofPoint(0, 0);
+  }
+
+  auto& vehicle = track.traffic[carIndex];
+  float dist = vehicle->getDistance() * (track.road->getTotalLength() / track.maxCells);
+
+  // Handle direction reversal
+  if (track.direction == -1) {
+    dist = track.road->getTotalLength() - dist;
+  }
+
+  vec2 pos = track.road->getPointAtDistance(dist);
+  return ofPoint(pos.x, pos.y);
+}
+
+//--------------------------------------------------------------
+bool ofApp::isInBlackHole(TrackInstance& track, int carIndex) {
+  if (carIndex >= track.traffic.size()) return false;
+
+  // Only check for SPIRAL road type
+  if (track.roadType != SPIRAL) return false;
+
+  auto& vehicle = track.traffic[carIndex];
+  float dist = vehicle->getDistance() * (track.road->getTotalLength() / track.maxCells);
+
+  if (track.direction == -1) {
+    dist = track.road->getTotalLength() - dist;
+  }
+
+  vec2 pos = track.road->getPointAtDistance(dist);
+  vec2 trackCenter(track.bounds.x + track.bounds.width / 2.0f,
+                   track.bounds.y + track.bounds.height / 2.0f);
+  float radius = glm::length(pos - trackCenter);
+
+  // Black hole threshold (same as existing draw method)
+  return (radius < 100.0f);
+}
+
+//--------------------------------------------------------------
+void ofApp::drawCarForTabMode(TrackInstance& track, int carIndex) {
+  if (carIndex >= track.traffic.size()) return;
+
+  auto& vehicle = track.traffic[carIndex];
+  float dist = vehicle->getDistance() * (track.road->getTotalLength() / track.maxCells);
+
+  // Handle direction reversal
+  if (track.direction == -1) {
+    dist = track.road->getTotalLength() - dist;
+  }
+
+  vec2 pos = track.road->getPointAtDistance(dist);
+  vec2 tangent = track.road->getTangentAtDistance(dist);
+  float angle = ofRadToDeg(atan2(tangent.y, tangent.x));
+
+  // Check black hole
+  vec2 carPos(pos.x, pos.y);
+  vec2 trackCenter(track.bounds.x + track.bounds.width / 2.0f,
+                   track.bounds.y + track.bounds.height / 2.0f);
+  float radius = glm::length(carPos - trackCenter);
+  bool inBlackHole = false;
+
+  if (track.roadType == SPIRAL && radius < 100.0f) {
+    inBlackHole = true;
+  }
+
+  // Skip drawing vehicle if gradient mode is active
+  if (track.gradientMode) {
+    return;
+  }
+
+  // Draw car
+  if (inBlackHole) {
+    ofSetColor(0, 0, 0);  // Black color for black hole
+    vehicle->draw(pos.x, pos.y, angle);
+  } else {
+    vehicle->draw(pos.x, pos.y, angle);
+  }
+}
+
+//--------------------------------------------------------------
+ofPoint ofApp::calculateControlPoint(ofPoint start, ofPoint end, ofPoint center,
+                                     int direction, float wobbleTime, int carIndex,
+                                     float curveIntensity, float curveAngle) {
+  float angleToTarget = atan2(end.y - start.y, end.x - start.x);
+  float radius = glm::length(vec2(end.x, end.y) - vec2(center.x, center.y));
+
+  // Use provided curve parameters (instead of always track 0)
+  float curveAmount = radius * curveIntensity;
+  float wobble = sin(wobbleTime * 3.0f + carIndex * 0.5f) * 85.0f;
+
+  ofPoint cp;
+  cp.x = start.x + cos(angleToTarget + curveAngle) * (curveAmount + wobble);
+  cp.y = start.y + sin(angleToTarget + curveAngle) * (curveAmount + wobble);
+
+  return cp;
+}
+
+//--------------------------------------------------------------
+void ofApp::drawBezierSegment(ofPoint p0, ofPoint p1, ofPoint p2, ofPoint p3,
+                               vec3 col, int segments) {
+  ofPolyline bezierPolyline;
+
+  for (int k = 0; k <= segments; k++) {
+    float t = (float)k / segments;
+    ofPoint p = getBezierPoint(t, p0, p1, p2, p3);
+    bezierPolyline.addVertex(p.x, p.y);
+  }
+
+  ofSetColor(col.r * 255, col.g * 255, col.b * 255, 150);
+  ofSetLineWidth(3);
+  bezierPolyline.draw();
+}
+
+//--------------------------------------------------------------
+void ofApp::drawContinuousBezier(ofPoint p0, ofPoint p1, ofPoint p2, ofPoint center,
+                                  vec3 col, float wobbleTime, int carIndex,
+                                  TrackInstance& outerTrack, TrackInstance& middleTrack, TrackInstance& innerTrack) {
+  // Calculate control points for smooth S-curve
+  // Segment 1: Outer (p0) → Middle (p1)
+  // Control point 1 uses OUTER track, Control point 2 uses MIDDLE track
+  ofPoint cp1_1 = calculateControlPoint(p0, p1, center, 1, wobbleTime, carIndex,
+                                        outerTrack.curveIntensity, outerTrack.curveAngle1);
+  ofPoint cp1_2 = calculateControlPoint(p1, p0, center, -1, wobbleTime, carIndex,
+                                        middleTrack.curveIntensity, middleTrack.curveAngle2);
+
+  // Segment 2: Middle (p1) → Inner (p2)
+  // TAB MODE: Both control points use MIDDLE track (inner curve intensity only affects inner loop!)
+  ofPoint cp2_1 = calculateControlPoint(p1, p2, center, 1, wobbleTime, carIndex,
+                                        middleTrack.curveIntensity, middleTrack.curveAngle1);
+  ofPoint cp2_2 = calculateControlPoint(p2, p1, center, -1, wobbleTime, carIndex,
+                                        middleTrack.curveIntensity, middleTrack.curveAngle2);
+
+  // Draw segment 1: outer → middle
+  drawBezierSegment(p0, cp1_1, cp1_2, p1, col, 100);
+
+  // Draw segment 2: middle → inner
+  drawBezierSegment(p1, cp2_1, cp2_2, p2, col, 100);
+}
+
+//--------------------------------------------------------------
+void ofApp::drawInterTrackBezier(float wobbleTime) {
+  // REQUIREMENT: Need 3 tracks (outer, middle, inner)
+  if (tracks.size() < 3) return;
+
+  TrackInstance& outerTrack = tracks[0];
+  TrackInstance& middleTrack = tracks[1];
+  TrackInstance& innerTrack = tracks[2];
+
+  // Get common center point (screen center)
+  float w = ofGetWidth();
+  float h = ofGetHeight();
+  ofPoint centerPoint(w / 2, h / 2);
+
+  // CASE 1: All tracks visible - draw outer → middle → inner
+  if (outerTrack.visible && middleTrack.visible && innerTrack.visible) {
+    // Determine max cars to process
+    int maxCars = std::min({
+      (int)outerTrack.traffic.size(),
+      (int)middleTrack.traffic.size(),
+      (int)innerTrack.traffic.size()
+    });
+
+    // Loop through cars by index
+    for (int i = 0; i < maxCars; i++) {
+      ofPoint outerPos = getCarPosition(outerTrack, i);
+      ofPoint middlePos = getCarPosition(middleTrack, i);
+      ofPoint innerPos = getCarPosition(innerTrack, i);
+
+      // Skip if any car is in black hole
+      if (isInBlackHole(outerTrack, i) ||
+          isInBlackHole(middleTrack, i) ||
+          isInBlackHole(innerTrack, i)) {
+        continue;
+      }
+
+      vec3 col = outerTrack.traffic[i]->getColor();
+
+      // Draw continuous bezier: outer → middle → inner
+      drawContinuousBezier(outerPos, middlePos, innerPos, centerPoint, col, wobbleTime, i,
+                          outerTrack, middleTrack, innerTrack);
+
+      // Draw all cars
+      drawCarForTabMode(outerTrack, i);
+      drawCarForTabMode(middleTrack, i);
+      drawCarForTabMode(innerTrack, i);
+    }
+
+    // Draw inner track loop (sesama mobil inner)
+    drawInnerTrackLoop(innerTrack, centerPoint, wobbleTime);
+  }
+  // CASE 2: Outer hidden - draw only middle → inner
+  else if (!outerTrack.visible && middleTrack.visible && innerTrack.visible) {
+    int maxCars = std::min({
+      (int)middleTrack.traffic.size(),
+      (int)innerTrack.traffic.size()
+    });
+
+    for (int i = 0; i < maxCars; i++) {
+      ofPoint middlePos = getCarPosition(middleTrack, i);
+      ofPoint innerPos = getCarPosition(innerTrack, i);
+
+      if (isInBlackHole(middleTrack, i) || isInBlackHole(innerTrack, i)) {
+        continue;
+      }
+
+      vec3 col = middleTrack.traffic[i]->getColor();
+
+      // Draw single segment: middle → inner
+      // TAB MODE: Both control points use MIDDLE track (inner curve intensity only affects inner loop!)
+      ofPoint cp1 = calculateControlPoint(middlePos, innerPos, centerPoint, 1, wobbleTime, i,
+                                         middleTrack.curveIntensity, middleTrack.curveAngle1);
+      ofPoint cp2 = calculateControlPoint(innerPos, middlePos, centerPoint, -1, wobbleTime, i,
+                                         middleTrack.curveIntensity, middleTrack.curveAngle2);
+
+      drawBezierSegment(middlePos, cp1, cp2, innerPos, col, 100);
+
+      // Draw only middle and inner cars (outer is hidden)
+      drawCarForTabMode(middleTrack, i);
+      drawCarForTabMode(innerTrack, i);
+    }
+
+    // Draw inner track loop (sesama mobil inner)
+    drawInnerTrackLoop(innerTrack, centerPoint, wobbleTime);
+  }
+  // CASE 3 & 4: Other combinations (not implemented yet)
+  else {
+    // For now, don't draw anything if other tracks are hidden
+    // TODO: Handle X and C key presses later
+  }
+}
+
+//--------------------------------------------------------------
+void ofApp::drawInnerTrackLoop(TrackInstance& innerTrack, ofPoint centerPoint, float wobbleTime) {
+  if (!innerTrack.visible) return;
+
+  int numCars = (int)innerTrack.traffic.size();
+  if (numCars < 2) return;  // Need at least 2 cars to make a loop
+
+  // Loop through each car and draw bezier to the next car (with wraparound)
+  for (int i = 0; i < numCars; i++) {
+    int nextIndex = (i + 1) % numCars;  // Wrap around to 0 for last car
+
+    // Skip if either car is in black hole
+    if (isInBlackHole(innerTrack, i) || isInBlackHole(innerTrack, nextIndex)) {
+      continue;
+    }
+
+    // Get positions of current and next car
+    ofPoint currentPos = getCarPosition(innerTrack, i);
+    ofPoint nextPos = getCarPosition(innerTrack, nextIndex);
+
+    // Use current car's color
+    vec3 col = innerTrack.traffic[i]->getColor();
+
+    // Calculate control points for smooth curve
+    ofPoint cp1 = calculateControlPoint(currentPos, nextPos, centerPoint, 1, wobbleTime, i,
+                                        innerTrack.curveIntensity, innerTrack.curveAngle1);
+    ofPoint cp2 = calculateControlPoint(nextPos, currentPos, centerPoint, -1, wobbleTime, i,
+                                        innerTrack.curveIntensity, innerTrack.curveAngle2);
+
+    // Draw bezier segment: current car → next car
+    drawBezierSegment(currentPos, cp1, cp2, nextPos, col, 100);
+  }
 }

@@ -5,7 +5,9 @@
 #include "ofMain.h"
 #include "road/CircleRoad.h"
 #include "road/CurvedRoad.h"
+#include "road/PerlinNoiseRoad.h"
 #include "road/Road.h"
+#include "road/SpiralRoad.h"
 #include <memory>
 #include <vector>
 
@@ -17,9 +19,12 @@ class ofApp : public ofBaseApp {
 public:
   // Road type enum
   enum RoadType {
-    CIRCLE,   // Lingkaran sempurna (default)
-    CURVED    // Oval dengan straight sections
+    CIRCLE,        // Lingkaran sempurna (default)
+    CURVED,        // Oval dengan straight sections
+    PERLIN_NOISE,  // Lingkaran organik dengan Perlin noise
+    SPIRAL         // Spiral in-out continuous
   };
+
   void setup();
   void update();
   void draw();
@@ -39,23 +44,32 @@ public:
 private:
   // Struct to hold simulation instance
   struct TrackInstance {
-    std::shared_ptr<Road> road;  // Gunakan Road base class (bukan CurvedRoad)
+    std::shared_ptr<Road> road;  // Gunakan Road base class
+    RoadType roadType;            // Tipe road untuk cek SpiralRoad behavior
     ofRectangle bounds;          // Simpan bounds untuk regenerate road
     std::vector<std::shared_ptr<Vehicle>> traffic;
     std::vector<int> grid;
     int maxCells;
+    float maxV;  // Kecepatan maksimal untuk track ini (normal mode)
+    float spiralMaxV;  // Kecepatan maksimal khusus untuk SpiralRoad
     int numLinesPerCar;  // Jumlah garis per mobil untuk track ini
     float curveIntensity; // Intensitas kelengkungan garis radial
     float curveAngle1;    // Angle offset untuk P1 (dalam radian)
     float curveAngle2;    // Angle offset untuk P2 (dalam radian)
     int direction;        // Arah putaran: 1 = counter-clockwise, -1 = clockwise
+    bool visible;         // Visibility toggle untuk track ini
+    bool drawFromCenter;  // true: center→car, false: car→center
+    bool gradientMode;    // true: white→dark gradient, hide cars
+
+    // Untuk SpiralRoad: daftar indeks vehicle yang harus dihapus
+    std::vector<int> vehiclesToRemove;
 
     // Helper to update this track
-    void setup(ofRectangle bounds, int numCars, int spacing, float maxV,
-               float probSlow, int maxCells, RoadType roadType, int numLinesPerCar, float curveIntensity,
-               float curveAngle1, float curveAngle2, int direction);
+    void setup(ofRectangle bounds, int numCars, int spacing, float maxV, float spiralMaxV,
+               float probSlow, int maxCells, RoadType roadType,
+               int numLinesPerCar, float curveIntensity, float curveAngle1, float curveAngle2, int direction);
     void update();
-    void draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint));
+    void draw(ofPoint (bezierHelper)(float, ofPoint, ofPoint, ofPoint, ofPoint), float wobbleTime, bool gradientMode);
     void regenerateRoad(RoadType roadType);  // Switch road type
   };
 
@@ -79,6 +93,11 @@ private:
   float maxVOuter = 20.0f;    // Track luar - paling cepat
   float maxVMiddle = 6.0f;   // Track tengah - sedang
   float maxVInner = 5.0f;    // Track dalam - paling lambat
+
+  // Kecepatan maksimal khusus untuk SpiralRoad
+  float spiralMaxVOuter = .7f;    
+  float spiralMaxVMiddle = 1.f;   
+  float spiralMaxVInner = 1.5f;    
 
   // Jumlah garis radial per mobil (per track)
   int numLinesPerCarOuter = 5;    // Track luar - lebih banyak garis
@@ -113,10 +132,22 @@ private:
   // Bezier curve helper
   static ofPoint getBezierPoint(float t, ofPoint p0, ofPoint p1, ofPoint p2, ofPoint p3);
 
+  // TAB mode helpers
+  void drawInterTrackBezier(float wobbleTime);
+  void drawCarForTabMode(TrackInstance& track, int carIndex);
+  void drawInnerTrackLoop(TrackInstance& innerTrack, ofPoint centerPoint, float wobbleTime);
+  ofPoint getCarPosition(TrackInstance& track, int carIndex);
+  bool isInBlackHole(TrackInstance& track, int carIndex);
+  void drawContinuousBezier(ofPoint p0, ofPoint p1, ofPoint p2, ofPoint center,
+                            vec3 col, float wobbleTime, int carIndex,
+                            TrackInstance& outerTrack, TrackInstance& middleTrack, TrackInstance& innerTrack);
+  ofPoint calculateControlPoint(ofPoint start, ofPoint end, ofPoint center,
+                                 int direction, float wobbleTime, int carIndex,
+                                 float curveIntensity, float curveAngle);
+  void drawBezierSegment(ofPoint p0, ofPoint p1, ofPoint p2, ofPoint p3,
+                         vec3 col, int segments);
+
   // Simulation control
   bool simulationStarted = false;  // Simulasi belum mulai sampai tekan 's' atau 'S'
-
-  // Road switching controls
-  // '1' = CircleRoad (default, lingkaran sempurna)
-  // '2' = CurvedRoad (oval dengan straight sections)
+  bool tabMode = false;  // TAB mode: draw inter-track bezier instead of center→car
 };

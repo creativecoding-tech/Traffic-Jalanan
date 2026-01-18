@@ -29,7 +29,7 @@ using glm::vec3;
 class Vehicle
 {
 public:
-	Vehicle(float startDist, int velocity, vec3 col) : distance(startDist)
+	Vehicle(float startDist, float velocity, vec3 col) : distance(startDist)
 		, v(velocity)
 		, color(col)
 		, movementStrat(nullptr)
@@ -87,6 +87,14 @@ public:
 	}
 
 	virtual void setGrid(const int* gridPtr, int gridSize){}
+
+	// Set max velocity di movement strategy
+	virtual void setMaxVelocity(float maxV) {
+		if (movementStrat) {
+			movementStrat->setMaxV(maxV);
+		}
+	}
+
 protected:
  /**
  * distance - Posisi mobil di jalan (dalam satuan pixels/units)
