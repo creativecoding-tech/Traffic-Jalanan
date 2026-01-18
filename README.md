@@ -3,7 +3,7 @@
 [![OpenFrameworks](https://img.shields.io/badge/OpenFrameworks-0.12.1-blue)](https://openframeworks.cc)
 [![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)](https://microsoft.com/windows)
 ![License](https://img.shields.io/badge/License-Apache%202.0-green)
-![Branch](https://img.shields.io/badge/Branch-wobble--effect--polyline-success)
+![Branch](https://img.shields.io/badge/Branch-experiment-brightgreen)
 
 [![Fund The Experiments](https://img.shields.io/badge/Fund-The_Experiments-FF5722?style=for-the-badge&logo=buy-me-a-coffee)](https://sociabuzz.com/abdkdhni)
 
@@ -13,7 +13,7 @@ Eksperimen creative coding dengan openFrameworks. Menggabungkan Nagel-Schreckenb
 
 ## 📺 Demo Video
 
-Lihat hasilnya di YouTube: [Watch Demo](https://youtu.be/nE35ZAXm14c)
+Lihat hasilnya di YouTube: [Watch Demo](https://youtu.be/aROtNiYkgeI)
 
 ---
 
@@ -25,6 +25,8 @@ Project ini adalah eksplorasi **generative art** yang menggunakan Nagel-Schrecke
 
 - __CIRCLE ROAD__ - Lingkaran sempurna dengan radius berbeda per track
 - __CURVED ROAD__ - Oval dengan straight sections, menggunakan ofPolyline untuk smooth curves
+- __PERLIN NOISE ROAD__ - Lingkaran organik dengan Perlin noise deformation
+- __SPIRAL ROAD__ - Spiral in-out continuous dengan black hole effect untuk mobil yang masuk ke center
 
 ### Vehicle System
 
@@ -38,13 +40,15 @@ Project ini adalah eksplorasi **generative art** yang menggunakan Nagel-Schrecke
 ### Visualization Features
 
 - __Radial Bezier Curves__ - Garis dari/ke center layar dengan S-curve control points (random direction)
+- __TAB Mode__ - Inter-track bezier visualization (outer → middle → inner) dengan inner track loop melingkar
 - __Wobble Effect__ - Organic movement pada bezier control points dengan sin/cos functions
 - __Dynamic Line Width__ - Ketebalan garis berdasarkan kecepatan kendaraan
 - __Trail Effect__ - Semi-transparent overlay untuk visual jejak yang menarik
 - __Multiple Lines Per Car__ - Konfigurasi jumlah garis radial per mobil
-- __Custom Curve Intensity__ - Pengaturan kelengkungan garis per track
+- __Custom Curve Intensity__ - Pengaturan kelengkungan garis per track (independent per track di TAB mode)
 - __Track Visibility Toggle__ - Show/hide track per layer (outer/middle/inner)
 - __Gradient Mode per Track__ - Mode white→dark gradient dengan hidden cars (independent per track)
+- __Black Hole Effect__ - Spiral road feature: mobil yang masuk ke center akan dihapus dengan visual effect
 
 ---
 
@@ -67,11 +71,17 @@ Project ini adalah eksplorasi **generative art** yang menggunakan Nagel-Schrecke
   - Jumlah cells berbeda per track
   - Arah putaran berbeda (clockwise/counterclockwise)
   - Random bezier direction (center→car atau car→center)
+- __TAB Mode__ - Inter-track bezier visualization dengan independent curve control:
+  - Outer→Middle bezier (outer & middle curve parameters)
+  - Middle→Inner bezier (middle curve parameters only)
+  - Inner track loop melingkar (inner curve parameters only)
+- __Multiple Road Types__ - Circle, Curved, Perlin Noise, Spiral dengan dynamic switching
 - __Bezier Curve Visualization__ - Cubic bezier dengan 100 tessellation segments
 - __Wobble Effect__ - Control points oscillate dengan ±85 pixel amplitude
 - __Physics-Based Body Simulation__ - Multi-segment vehicle body dengan follow logic
-- __Real-time Parameter Tuning__ - Keyboard shortcuts untuk ubah curve intensity
+- __Real-time Parameter Tuning__ - Keyboard shortcuts untuk ubah curve intensity per track
 - __Per-Track Gradient Mode__ - Mesh-based vertex coloring dengan white→dark gradient
+- __Black Hole Effect__ - Spiral road feature dengan automatic vehicle removal
 - __Reset Functionality__ - Re-generate semua tracks, mobil, dan bezier dengan random config
 
 ---
@@ -82,18 +92,21 @@ Project ini adalah eksplorasi **generative art** yang menggunakan Nagel-Schrecke
 | --- | --- |
 | __Key 'S'__ | Mulai simulasi (Start) |
 | __Key 'R'__ | Reset semua (tracks, mobil, bezier - re-generate dengan random config) |
-| __Key 'T'__ | Toggle gradient mode untuk **OUTER** track (white→dark, hide cars) |
-| __Key 'Y'__ | Toggle gradient mode untuk **MIDDLE** track (white→dark, hide cars) |
-| __Key 'U'__ | Toggle gradient mode untuk **INNER** track (white→dark, hide cars) |
+| __Key 'TAB'__ | Toggle TAB mode (inter-track bezier outer→middle→inner + inner loop) |
 | __Key '1'__ | Switch ke CircleRoad (lingkaran sempurna) |
 | __Key '2'__ | Switch ke CurvedRoad (oval dengan straight sections) |
+| __Key '3'__ | Switch ke PerlinNoiseRoad (lingkaran organik dengan Perlin noise) |
+| __Key '4'__ | Switch ke SpiralRoad (spiral in-out dengan black hole effect) |
 | __Key '+' / '='__ | Tingkatkan curve intensity track OUTER |
 | __Key '-' / '_'__ | Kurangi curve intensity track OUTER |
 | __Key ']'__ | Tingkatkan curve intensity track MIDDLE |
 | __Key '['__ | Kurangi curve intensity track MIDDLE |
-| __Key '.' / '>'__ | Tingkatkan curve intensity track INNER |
-| __Key ',' / '<'__ | Kurangi curve intensity track INNER |
-| __Key 'Z'__ | Toggle visibility track OUTER |
+| __Key '.' / '>'__ | Tingkatkan curve intensity track INNER (TAB mode: hanya inner loop) |
+| __Key ',' / '<'__ | Kurangi curve intensity track INNER (TAB mode: hanya inner loop) |
+| __Key 'T'__ | Toggle gradient mode untuk **OUTER** track (white→dark, hide cars) |
+| __Key 'Y'__ | Toggle gradient mode untuk **MIDDLE** track (white→dark, hide cars) |
+| __Key 'U'__ | Toggle gradient mode untuk **INNER** track (white→dark, hide cars) |
+| __Key 'Z'__ | Toggle visibility track OUTER (TAB mode: hide outer bezier & mobil) |
 | __Key 'X'__ | Toggle visibility track MIDDLE |
 | __Key 'C'__ | Toggle visibility track INNER |
 | __Key 'Q'__ | Keluar dari aplikasi |
@@ -150,7 +163,9 @@ Traffic-Jalanan/
 │   ├── road/                 # Road system implementations
 │   │   ├── Road.h            # Abstract base class untuk semua jenis road
 │   │   ├── CircleRoad.cpp/h  # Lingkaran sempurna
-│   │   └── CurvedRoad.cpp/h  # Oval dengan straight sections
+│   │   ├── CurvedRoad.cpp/h  # Oval dengan straight sections
+│   │   ├── PerlinNoiseRoad.cpp/h  # Lingkaran organik dengan Perlin noise
+│   │   └── SpiralRoad.cpp/h  # Spiral in-out dengan black hole effect
 │   └── strategies/           # Movement strategies (Strategy Pattern)
 │       ├── MovementStrategy.h         # Interface untuk movement algorithms
 │       ├── MovementStrategy.cpp       # Base implementation
@@ -287,7 +302,7 @@ This project is licensed under the __Apache License 2.0__ - see the LICENSE file
 ## 🔗 Links
 
 - __OpenFrameworks__ - openframeworks.cc
-- __Watch Demo__ - [YouTube demonstration](https://youtu.be/nE35ZAXm14c)
+- __Watch Demo__ - [YouTube demonstration](https://youtu.be/aROtNiYkgeI)
 - __Support Me__ - [Fund the experiments ☕](https://sociabuzz.com/abdkdhni)
 
 ---
