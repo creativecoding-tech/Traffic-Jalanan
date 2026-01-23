@@ -139,7 +139,16 @@ Project ini adalah eksplorasi **generative art** yang menggunakan Nagel-Schrecke
 
 ```bash
 # Clone repository ini
-git clone https://github.com/username/Traffic-Jalanan.git
+git clone https://github.com/creativecoding-tech/Traffic-Jalanan.git
+
+# Jalankan OpenFrameworks Project Generator
+# Buka: openFrameworks/apps/projectGenerator/projectGenerator.exe
+
+# Import project yang sudah diclone
+# 1. Click "Import" pada Project Generator
+# 2. Navigate ke folder Traffic-Jalanan yang sudah diclone
+# 3. Select folder dan klik "Select Current Folder"
+# 4. Click "Update" atau "Generate"
 
 # Buka Visual Studio
 # Double-click: Traffic-Jalanan.sln
